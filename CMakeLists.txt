@@ -8,4 +8,5 @@ add_executable(Jwatrio main.c
         render/render.h
         render/render.c
         render/text.c
-        screen/network.c)
+        screen/network.c
+        screen/home.c)
