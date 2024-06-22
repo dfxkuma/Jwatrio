@@ -20,7 +20,13 @@ int screenStartHome(int screenX, int screenY) {
     ConsoleRender* render = createRender(5, 4, menuText, menuItems);
     movePos(screenX, screenY + 5); printf("      Yuchan Han, Seongju Cho"); Sleep(100);
     movePos(screenX + 6, screenY + 2); printf("J W A T R I O"); Sleep(100);
-    render->start(render);
+    render->renderMenu(render);
+    while (1) {
+        int callbackCode = render->menuKeyDetect(render);
+        if (callbackCode < 0) {
+            break;
+        }
+    }
 
     int selectedMenu = render->getSelectedMenu(render);
     switch (selectedMenu) {
@@ -40,5 +46,4 @@ int screenStartHome(int screenX, int screenY) {
             printf("좌호빈사진보기\n");
             break;
     }
-
 }
