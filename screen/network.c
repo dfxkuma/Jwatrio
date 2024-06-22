@@ -17,9 +17,9 @@ void renderEmoji(int x, int y) {
 }
 
 int screenStartNetwork(int screenX, int screenY) {
-    int menuItems = 3;
-
     system("cls");
+
+    int menuItems = 3;
     char* menuText[] = {
             " + 새 방 만들기 \n",
             " <1> 좌호빈 (0:5575) [ 2 / 15 ]\n",
