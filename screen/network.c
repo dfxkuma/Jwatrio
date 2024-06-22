@@ -8,7 +8,6 @@
 const char* frames[] = { "-", "/", "\\"};
 int numFrames = sizeof(frames) / sizeof(frames[0]);
 int currentFrame = 0;
-int delay = 100000;
 
 void renderEmoji(int x, int y) {
     movePos(x, y); printf("%s", frames[currentFrame]);
