@@ -42,4 +42,7 @@ int screenStartNetwork(int screenX, int screenY) {
     }
 
     int selectedMenu = render->getSelectedMenu(render);
+    if (selectedMenu == -1) {
+        screenStartHome(screenX, screenY);
+    }
 }
