@@ -17,6 +17,7 @@ int main() {
             " Highscores \n",
             " 좌호빈사진보기 \n",
     };
+    system("cls");
 
     ConsoleRender* render = createRender(5, 4, menuText, menuItems);
     movePos(screenX, screenY + 5); printf("      Yuchan Han, Seongju Cho"); Sleep(100);
