@@ -21,17 +21,17 @@ int screenStartNetwork(int screenX, int screenY) {
 
     system("cls");
     char* menuText[] = {
-            " + »õ ¹æ ¸¸µé±â \n",
-            " <1> ÁÂÈ£ºó (0:5575) [ 2 / 15 ]\n",
-            " <2> ·ÎÄÃ¼­¹ö (0:5575) [ 3 / 15 ] \n",
+            " + ìƒˆ ë°© ë§Œë“¤ê¸° \n",
+            " <1> ì¢Œí˜¸ë¹ˆ (0:5575) [ 2 / 15 ]\n",
+            " <2> ë¡œì»¬ì„œë²„ (0:5575) [ 3 / 15 ] \n",
     };
 
     ConsoleRender* render = createRender(5, 4, menuText, menuItems);
     movePos(screenX, screenY + 5); printf("      Yuchan Han, Seongju Cho"); Sleep(100);
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
-    movePos(screenX + 4, screenY + 4); printf("< ³×Æ®¿öÅ©¿¡¼­ °ÔÀÓÇÏ±â >"); Sleep(100);
+    movePos(screenX + 4, screenY + 4); printf("< ë„¤íŠ¸ì›Œí¬ì—ì„œ ê²Œìž„í•˜ê¸° >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");
-    movePos(screenX + 4, screenY + 5); printf(" ³×Æ®¿öÅ©¿¡¼­ ¹æ Ã£´ÂÁß "); Sleep(100);
+    movePos(screenX + 4, screenY + 5); printf(" ë„¤íŠ¸ì›Œí¬ì—ì„œ ë°© ì°¾ëŠ”ì¤‘ "); Sleep(100);
     render->renderMenu(render);
 
     while (1) {

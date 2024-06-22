@@ -15,7 +15,7 @@ int main() {
             " Network Game \n",
             " Options \n",
             " Highscores \n",
-            " ÁÂÈ£ºó»çÁøº¸±â \n",
+            " ì¢Œí˜¸ë¹ˆì‚¬ì§„ë³´ê¸° \n",
     };
 
     ConsoleRender* render = createRender(5, 4, menuText, menuItems);
@@ -38,11 +38,11 @@ int main() {
             printf("Highscores\n");
             break;
         case 4:
-            printf("ÁÂÈ£ºó»çÁøº¸±â\n");
+            printf("ì¢Œí˜¸ë¹ˆì‚¬ì§„ë³´ê¸°\n");
             break;
     }
 
-    // ¸Þ¸ð¸® ÇØÁ¦
+    // ë©”ëª¨ë¦¬ í•´ì œ
     for (int i = 0; i < menuItems; i++) {
         free(render->menuSelectText[i]);
     }

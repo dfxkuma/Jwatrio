@@ -44,7 +44,7 @@ void renderMenu(ConsoleRender* console) {
     int selected = 0;
     for (int yPos = 7; yPos < 7 + console->menuItems; yPos++) {
         if (console->menu + 7 == yPos) {
-            // ¹Ì¸® ¼±ÅÃµÈ ¸Ş´º¸¦ Ãâ·Â
+            // ë¯¸ë¦¬ ì„ íƒëœ ë©”ë‰´ë¥¼ ì¶œë ¥
             console->setColor(CONSOLE_SELECTED);
             selected = 1;
         }
@@ -60,22 +60,22 @@ int menuKeyDetect(ConsoleRender* console) {
     if (_kbhit()) {
         int ch = _getch();
         if (ch == 0 || ch == 224) {
-            ch = _getch(); // ¹æÇâÅ° ÀÔ·Â
-            if (ch == 72) { // À§ÂÊ È­»ìÇ¥
+            ch = _getch(); // ë°©í–¥í‚¤ ì…ë ¥
+            if (ch == 72) { // ìœ„ìª½ í™”ì‚´í‘œ
                 if (console->menu > 0) {
                     console->menu--;
                 }
                 console->renderMenu(console);
             }
-            else if (ch == 80) { // ¾Æ·¡ÂÊ È­»ìÇ¥
+            else if (ch == 80) { // ì•„ë˜ìª½ í™”ì‚´í‘œ
                 if (console->menu < console->menuItems - 1) {
                     console->menu++;
                 }
                 console->renderMenu(console);
             }
         }
-        else if (ch == 13) { // Enter Å°
-            console->renderCheck = 1; // ¸Ş´º ¼±ÅÃ
+        else if (ch == 13) { // Enter í‚¤
+            console->renderCheck = 1; // ë©”ë‰´ ì„ íƒ
             return -1;
         }
     }
