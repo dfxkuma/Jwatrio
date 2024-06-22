@@ -27,7 +27,6 @@ int screenStartNetwork(int screenX, int screenY) {
     };
 
     ConsoleRender* render = createRender(5, 4, menuText, menuItems);
-    movePos(screenX, screenY + 5); printf("      Yuchan Han, Seongju Cho"); Sleep(100);
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
     movePos(screenX + 4, screenY + 4); printf("< 네트워크에서 게임하기 >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");
@@ -35,7 +34,7 @@ int screenStartNetwork(int screenX, int screenY) {
     render->renderMenu(render);
 
     while (1) {
-        renderEmoji(screenX + 18, screenY + 5);
+        renderEmoji(screenX + 16, screenY + 5);
         int callbackCode = render->menuKeyDetect(render);
         if (callbackCode < 0) {
             break;
