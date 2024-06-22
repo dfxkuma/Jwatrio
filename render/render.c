@@ -20,24 +20,11 @@ ConsoleRender* createRender(int x, int y, char** menuSelectText, int menuItems) 
 
         console->movePos = movePos;
         console->setColor = setColor;
-        console->start = start;
         console->renderMenu = renderMenu;
         console->menuKeyDetect = menuKeyDetect;
         console->getSelectedMenu = getSelectedMenu;
     }
     return console;
-}
-
-
-void start(ConsoleRender* console) {
-    console->renderMenu(console);
-
-    while (1) {
-        int callbackCode = console->menuKeyDetect(console);
-        if (callbackCode < 0) {
-            break;
-        }
-    }
 }
 
 void renderMenu(ConsoleRender* console) {
@@ -59,7 +46,12 @@ void renderMenu(ConsoleRender* console) {
 int menuKeyDetect(ConsoleRender* console) {
     if (_kbhit()) {
         int ch = _getch();
-        if (ch == 0 || ch == 224) {
+        if (ch == 27) { // ESC 키
+            console->renderCheck = 1;
+            console->menu = -1; // 뒤로가기
+            return -1;
+        }
+        else if (ch == 0 || ch == 224) {
             ch = _getch(); // 방향키 입력
             if (ch == 72) { // 위쪽 화살표
                 if (console->menu > 0) {
@@ -78,6 +70,7 @@ int menuKeyDetect(ConsoleRender* console) {
             console->renderCheck = 1; // 메뉴 선택
             return -1;
         }
+
     }
     return 0;
 }

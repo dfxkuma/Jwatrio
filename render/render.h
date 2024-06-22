@@ -17,7 +17,6 @@ typedef struct {
     char** menuSelectText;
     void (*movePos)(int x, int y);
     void (*setColor)(int color);
-    void (*start)();
     void (*renderMenu)();
     int (*menuKeyDetect)();
     int (*getSelectedMenu)();
@@ -26,7 +25,6 @@ typedef struct {
 ConsoleRender* createRender(int x, int y, char** menuSelectText, int menuItems);
 void movePos(int x, int y);
 void setColor(int color);
-void start(ConsoleRender* console);
 void renderMenu(ConsoleRender* console);
 int menuKeyDetect(ConsoleRender* console);
 int getSelectedMenu(ConsoleRender* console);
