@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <stdlib.h>
 
-#include "../render/render.h"
+#include "../render/menu.h"
 #include "../screen.h"
 
 int screenStartHome(int screenX, int screenY) {
@@ -17,7 +17,7 @@ int screenStartHome(int screenX, int screenY) {
             " 좌호빈사진보기 \n",
     };
 
-    ConsoleRender* render = createRender(5, 4, menuText, menuItems);
+    MenuRender* render = createMenuRender(5, 4, menuText, menuItems);
     movePos(screenX, screenY + 5); printf("      Yuchan Han, Seongju Cho"); Sleep(100);
     movePos(screenX + 6, screenY + 2); printf("J W A T R I O"); Sleep(100);
     render->renderMenu(render);

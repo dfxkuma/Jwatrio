@@ -2,7 +2,7 @@
 #include <windows.h>
 #include <stdlib.h>
 
-#include "../render/render.h"
+#include "../render/menu.h"
 #include "../screen.h"
 
 const char* frames[] = { "-", "/", "\\"};
@@ -26,7 +26,7 @@ int screenStartNetwork(int screenX, int screenY) {
             " <2> 로컬서버 (0:5575) [ 3 / 15 ] \n",
     };
 
-    ConsoleRender* render = createRender(5, 4, menuText, menuItems);
+    MenuRender* render = createMenuRender(5, 4, menuText, menuItems);
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
     movePos(screenX + 4, screenY + 4); printf("< 네트워크에서 게임하기 >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");

@@ -1,8 +1,8 @@
-#include "render.h"
+#include "menu.h"
 #include "text.h"
 
-ConsoleRender* createRender(int x, int y, char** menuSelectText, int menuItems) {
-    ConsoleRender* console = (ConsoleRender*)malloc(sizeof(ConsoleRender));
+MenuRender* createMenuRender(int x, int y, char** menuSelectText, int menuItems) {
+    MenuRender* console = (MenuRender*)malloc(sizeof(MenuRender));
 
     if (console != NULL) {
         console->key = 0;
@@ -27,7 +27,7 @@ ConsoleRender* createRender(int x, int y, char** menuSelectText, int menuItems) 
     return console;
 }
 
-void renderMenu(ConsoleRender* console) {
+void renderMenu(MenuRender* console) {
     int selected = 0;
     for (int yPos = 7; yPos < 7 + console->menuItems; yPos++) {
         if (console->menu + 7 == yPos) {
@@ -43,7 +43,7 @@ void renderMenu(ConsoleRender* console) {
     }
 }
 
-int menuKeyDetect(ConsoleRender* console) {
+int menuKeyDetect(MenuRender* console) {
     if (_kbhit()) {
         int ch = _getch();
         if (ch == 27) { // ESC 키
@@ -75,6 +75,6 @@ int menuKeyDetect(ConsoleRender* console) {
     return 0;
 }
 
-int getSelectedMenu(ConsoleRender* console) {
+int getSelectedMenu(MenuRender* console) {
     return console->menu;
 }

@@ -20,11 +20,11 @@ typedef struct {
     void (*renderMenu)();
     int (*menuKeyDetect)();
     int (*getSelectedMenu)();
-} ConsoleRender;
+} MenuRender;
 
-ConsoleRender* createRender(int x, int y, char** menuSelectText, int menuItems);
+MenuRender* createMenuRender(int x, int y, char** menuSelectText, int menuItems);
 void movePos(int x, int y);
 void setColor(int color);
-void renderMenu(ConsoleRender* console);
-int menuKeyDetect(ConsoleRender* console);
-int getSelectedMenu(ConsoleRender* console);
+void renderMenu(MenuRender* console);
+int menuKeyDetect(MenuRender* console);
+int getSelectedMenu(MenuRender* console);
