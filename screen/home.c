@@ -11,16 +11,15 @@ int screenStartHome(int screenX, int screenY) {
 
     int menuItems = 4;
     char* menuText[] = {
-            " 1-Player Game \n",
-            " Network Game \n",
-            " Options \n",
-            " Highscores \n",
-            " 좌호빈사진보기 \n",
+            " MP    | MULTIPLAY - PLAY ONLINE WITH FRIENDS \n",
+            " 1P    | SOLO - CHALLENGE YOURSELF            \n",
+            " CFG   | CONFIG - TWEAK YOUR JWATRIO          \n",
+            " ABOUT | ALL ABOUT JWATRIO                    \n",
     };
 
-    MenuRender* render = createMenuRender(5, 4, menuText, menuItems);
-    movePos(screenX, screenY + 5); printf("      Yuchan Han, Seongju Cho"); Sleep(100);
-    movePos(screenX + 6, screenY + 2); printf("J W A T R I O"); Sleep(100);
+    MenuRender* render = createMenuRender(3, 4, menuText, menuItems);
+    movePos(screenX + 12, screenY + 5); printf("HOME"); Sleep(100);
+    movePos(screenX + 9, screenY + 2); printf("WELCOME TO JWATRIO!"); Sleep(100);
     render->renderMenu(render);
     while (1) {
         int callbackCode = render->menuKeyDetect(render);
@@ -32,21 +31,19 @@ int screenStartHome(int screenX, int screenY) {
     int selectedMenu = render->getSelectedMenu(render);
     switch (selectedMenu) {
         case 0:
-            printf("1-Player Game\n");
-            break;
-        case 1:
             screenStartNetwork(screenX, screenY);
             break;
+        case 1:
+            screenStartSoloGame(screenX, screenY);
+            break;
         case 2:
-            system("cls");
-            char* str = prompt(5, 5, "옵션을 입력해주세요.", 100);
-            printf("\n\n입력한 문자열: %s\n", str);
+            screenStartGame(screenX, screenY);
             break;
         case 3:
-            printf("Highscores\n");
+            printf("config\n");
             break;
         case 4:
-            printf("좌호빈사진보기\n");
+            printf("about\n");
             break;
     }
 }
