@@ -4,6 +4,7 @@
 
 #include "../render/menu.h"
 #include "../screen.h"
+#include "../render/prompt.h"
 
 int screenStartHome(int screenX, int screenY) {
     system("cls");
@@ -37,7 +38,9 @@ int screenStartHome(int screenX, int screenY) {
             screenStartNetwork(screenX, screenY);
             break;
         case 2:
-            printf("Options\n");
+            system("cls");
+            char* str = prompt(5, 5, "옵션을 입력해주세요.", 100);
+            printf("\n\n입력한 문자열: %s\n", str);
             break;
         case 3:
             printf("Highscores\n");

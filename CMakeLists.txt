@@ -9,4 +9,6 @@ add_executable(Jwatrio main.c
         render/menu.c
         render/text.c
         screen/network.c
-        screen/home.c)
+        screen/home.c
+        render/prompt.h
+        render/prompt.c)
