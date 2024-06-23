@@ -12,7 +12,7 @@ int currentFrame = 0;
 void renderEmoji(int x, int y) {
     movePos(x, y); printf("%s", frames[currentFrame]);
     currentFrame = (currentFrame + 1) % numFrames;
-    Sleep(500);
+    Sleep(200);
 }
 
 int screenStartNetwork(int screenX, int screenY) {
