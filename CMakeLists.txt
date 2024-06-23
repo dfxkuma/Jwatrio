@@ -11,4 +11,8 @@ add_executable(Jwatrio main.c
         screen/network.c
         screen/home.c
         render/prompt.h
-        render/prompt.c)
+        render/prompt.c
+        screen/solo.c
+        screen/game.c
+        game/render.c
+)
