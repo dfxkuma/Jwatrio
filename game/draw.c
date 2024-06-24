@@ -1,7 +1,8 @@
 #include <stdio.h>
 
 #include "../render/text.h"
-#include "../render/color.h"
+#include "../utils/color.h"
+#include "draw.h"
 
 void drawBlock(int x, int y, int color) {
     movePos(x, y);

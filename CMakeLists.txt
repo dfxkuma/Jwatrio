@@ -15,6 +15,10 @@ add_executable(Jwatrio main.c
         screen/solo.c
         screen/game.c
         game/render.c
-        server/server.c
-        render/color.h
+#        server/server.c
+        utils/color.h
+        game/draw.c
+        game/draw.h
+        utils/keyboard.h
+        screen/connectServer.c
 )
