@@ -1,6 +1,7 @@
 #include "menu.h"
 #include "text.h"
-#include "color.h"
+#include "../utils/color.h"
+#include "../utils/keyboard.h"
 
 MenuRender* createMenuRender(int x, int y, char** menuSelectText, int menuItems) {
     MenuRender* console = (MenuRender*)malloc(sizeof(MenuRender));
@@ -47,27 +48,27 @@ void renderMenu(MenuRender* console) {
 int menuKeyDetect(MenuRender* console) {
     if (_kbhit()) {
         int ch = _getch();
-        if (ch == 27) { // ESC 키
+        if (ch == KEY_ESC) { // ESC 키
             console->renderCheck = 1;
             console->menu = -1; // 뒤로가기
             return -1;
         }
-        else if (ch == 0 || ch == 224) {
+        else if (ch == 0 || ch == KEY_GROUP_ARROW) {
             ch = _getch(); // 방향키 입력
-            if (ch == 72) { // 위쪽 화살표
+            if (ch == KEY_UP) { // 위쪽 화살표
                 if (console->menu > 0) {
                     console->menu--;
                 }
                 console->renderMenu(console);
             }
-            else if (ch == 80) { // 아래쪽 화살표
+            else if (ch == KEY_DOWN) { // 아래쪽 화살표
                 if (console->menu < console->menuItems - 1) {
                     console->menu++;
                 }
                 console->renderMenu(console);
             }
         }
-        else if (ch == 13) { // Enter 키
+        else if (ch == KEY_ENTER) { // Enter 키
             console->renderCheck = 1; // 메뉴 선택
             return -1;
         }

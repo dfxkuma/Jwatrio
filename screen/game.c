@@ -2,20 +2,8 @@
 #include <windows.h>
 
 #include "../render/text.h"
-#include "../render/color.h"
-
-void drawBlock(int x, int y, int color) {
-    movePos(x, y);
-    setColor(color);
-    printf("  ");
-    setColor(COLOR_DEFAULT);
-}
-
-void drawText(int x, int y, char* text, int color) {
-    setColor(color);
-    movePos(x, y);
-    printf("%s", text);
-}
+#include "../utils/color.h"
+#include "../game/draw.h"
 
 int screenStartGame(int screenX, int screenY) {
     system("cls"); // Clear the console
