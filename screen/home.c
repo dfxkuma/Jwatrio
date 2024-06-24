@@ -5,6 +5,7 @@
 #include "../render/menu.h"
 #include "../screen.h"
 #include "../render/prompt.h"
+#include "../game/engine.h"
 
 int screenStartHome(int screenX, int screenY) {
     system("cls");
@@ -41,7 +42,7 @@ int screenStartHome(int screenX, int screenY) {
             screenStartGame(screenX, screenY);
             break;
         case 3:
-            printf("config\n");
+//            startGameEngine(screenX, screenY);/
             break;
         case 4:
             screenStartConnectServer(screenX, screenY);

@@ -15,10 +15,15 @@ add_executable(Jwatrio main.c
         screen/solo.c
         screen/game.c
         game/render.c
-#        server/server.c
+        server/server.c
         utils/color.h
         game/draw.c
         game/draw.h
         utils/keyboard.h
         screen/connectServer.c
+        game/engine.c
+        server/server.h
+        server/server.c
 )
+
+target_link_libraries(Jwatrio ws2_32)

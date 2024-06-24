@@ -37,7 +37,6 @@ int screenStartSoloGame(int screenX, int screenY) {
             screenStartHome(screenX, screenY);
             break;
         case 0:
-            screenStartNetwork(screenX, screenY);
             break;
         case 1:
             screenStartSoloGame(screenX, screenY);
