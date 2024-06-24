@@ -9,12 +9,13 @@
 int screenStartHome(int screenX, int screenY) {
     system("cls");
 
-    int menuItems = 4;
+    int menuItems = 5;
     char* menuText[] = {
             " MP    | MULTIPLAY - PLAY ONLINE WITH FRIENDS \n",
             " 1P    | SOLO - CHALLENGE YOURSELF            \n",
             " CFG   | CONFIG - TWEAK YOUR JWATRIO          \n",
             " ABOUT | ALL ABOUT JWATRIO                    \n",
+            " 좌호빈사진보기                    \n",
     };
 
     MenuRender* render = createMenuRender(3, 4, menuText, menuItems);
@@ -43,7 +44,6 @@ int screenStartHome(int screenX, int screenY) {
             printf("config\n");
             break;
         case 4:
-            printf("about\n");
-            break;
+            screenStartConnectServer(screenX, screenY);
     }
 }
