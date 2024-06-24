@@ -2,6 +2,7 @@
 #include <string.h>
 #include <winsock2.h>
 #include <windows.h>
+#include "server.h"
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -9,19 +10,6 @@
 #define BOARD_HEIGHT 20
 #define MAX_SESSIONS 10
 #define MAX_PLAYERS 2
-
-typedef struct {
-    int board[BOARD_HEIGHT][BOARD_WIDTH];
-    int currentPiece;
-    int x, y;
-    int score;
-    char username[50];  // 사용자 이름 추가
-} GameState;
-
-typedef struct {
-    GameState players[MAX_PLAYERS];
-    int playerCount;
-} GameSession;
 
 GameSession gameSessions[MAX_SESSIONS];
 int sessionCount = 0;
@@ -144,7 +132,7 @@ DWORD WINAPI handleClient(LPVOID arg) {
     return 0;
 }
 
-void initServer(int port) {
+DWORD WINAPI serverThread(int port) {
     WSADATA wsa;
     SOCKET server_fd;
     struct sockaddr_in address;
@@ -176,10 +164,10 @@ void initServer(int port) {
 
     DeleteCriticalSection(&session_mutex);
     WSACleanup();
+    return 0;
 }
 
-
-int startServer() {
-    initServer(6974);
+int startGameServer() {
+    serverThread(6974);
     return 0;
 }
