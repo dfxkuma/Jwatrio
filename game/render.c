@@ -25,6 +25,7 @@ void renderHOLDUI (int screenX, int screenY) {
     drawText(5, screenY + 5, "  ", COLOR_BG_DEFAULT);
     drawText(6, screenY + 5, " ", COLOR_BG_DEFAULT);
 }
+
 void renderUI (int screenX, int screenY) {
     renderHOLDUI(screenX, screenY);
 }
