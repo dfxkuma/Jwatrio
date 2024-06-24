@@ -1,5 +1,6 @@
 #include "menu.h"
 #include "text.h"
+#include "color.h"
 
 MenuRender* createMenuRender(int x, int y, char** menuSelectText, int menuItems) {
     MenuRender* console = (MenuRender*)malloc(sizeof(MenuRender));
@@ -32,12 +33,12 @@ void renderMenu(MenuRender* console) {
     for (int yPos = 7; yPos < 7 + console->menuItems; yPos++) {
         if (console->menu + 7 == yPos) {
             // 미리 선택된 메뉴를 출력
-            console->setColor(CONSOLE_SELECTED);
+            console->setColor(COLOR_BG_DEFAULT);
             selected = 1;
         }
         console->movePos(console->x + 5, console->y + yPos); printf("%s", console->menuSelectText[yPos - 7]);
         if (selected) {
-            console->setColor(CONSOLE_DEFAULT);
+            console->setColor(COLOR_DEFAULT);
             selected = 0;
         }
     }

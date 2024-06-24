@@ -2,12 +2,13 @@
 #include <windows.h>
 
 #include "../render/text.h"
+#include "../render/color.h"
 
 void drawBlock(int x, int y, int color) {
     movePos(x, y);
     setColor(color);
     printf("  ");
-    setColor(CONSOLE_DEFAULT);
+    setColor(COLOR_DEFAULT);
 }
 
 void drawText(int x, int y, char* text, int color) {
