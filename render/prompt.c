@@ -10,6 +10,7 @@ char* prompt(int x, int y, char* message, int size) {
     movePos(x + 6, y + 5); printf(" > "); Sleep(100);
     movePos(x + 8, y + 6); printf("ㄴ [Enter]를 눌러주세요.");
     movePos(x + 8, y + 5);
+    setCursorType(SOLIDCURSOR);
     char* answer = (char*)malloc(size);
     if (fgets(answer, size, stdin) != NULL) {
         size_t len = strlen(answer);
@@ -17,5 +18,6 @@ char* prompt(int x, int y, char* message, int size) {
             answer[len - 1] = '\0';
         }
     }
+    setCursorType(NOCURSOR);
     return answer;
 }
