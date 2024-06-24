@@ -4,9 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define CONSOLE_SELECTED 240
-#define CONSOLE_DEFAULT 15
-
 typedef struct {
     int key;
     int menu;
