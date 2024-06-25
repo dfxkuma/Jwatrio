@@ -52,11 +52,6 @@ int screenStartGame(int screenX, int screenY) {
     drawBlock(4, screenY + 3, 42);
 
     // Draw next pieces
-    drawText(screenX + 13, screenY, "NEXT", 7);
-    drawBlock(screenX + 13, screenY + 1, 14); // Yellow
-    drawBlock(screenX + 14, screenY + 2, 14);
-    drawBlock(screenX + 13, screenY + 3, 14);
-    drawBlock(screenX + 14, screenY + 4, 14);
 
     drawText(screenX + 13, screenY, "  NEXT       ", 240);
     drawText(screenX + 13, screenY + 1, " ", 240);

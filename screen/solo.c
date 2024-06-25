@@ -5,6 +5,7 @@
 #include "../render/menu.h"
 #include "../screen.h"
 #include "../render/prompt.h"
+#include "../game/engine.h"
 
 int screenStartSoloGame(int screenX, int screenY) {
     system("cls");
@@ -42,12 +43,6 @@ int screenStartSoloGame(int screenX, int screenY) {
             screenStartSoloGame(screenX, screenY);
             break;
         case 2:
-            break;
-        case 3:
-            printf("config\n");
-            break;
-        case 4:
-            printf("about\n");
-            break;
+            startGameEngine(screenX, screenY);
     }
 }

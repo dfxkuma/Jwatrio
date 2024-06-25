@@ -10,13 +10,12 @@
 int screenStartHome(int screenX, int screenY) {
     system("cls");
 
-    int menuItems = 5;
+    int menuItems = 4;
     char* menuText[] = {
             " MP    | MULTIPLAY - PLAY ONLINE WITH FRIENDS \n",
             " 1P    | SOLO - CHALLENGE YOURSELF            \n",
             " CFG   | CONFIG - TWEAK YOUR JWATRIO          \n",
             " ABOUT | ALL ABOUT JWATRIO                    \n",
-            " 좌호빈사진보기                    \n",
     };
 
     MenuRender* render = createMenuRender(3, 4, menuText, menuItems);

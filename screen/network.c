@@ -54,7 +54,7 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
 void print_server_ips(int screenX, int screenY) {
     printf("Valid server responses:\n");
     system("cls");
-    int menuItems = 3;
+    int menuItems = 1;
     char* menuText[] = {
         " + 새 방 만들기 \n",
     };
@@ -92,6 +92,7 @@ void print_server_ips(int screenX, int screenY) {
 
 int screenStartNetwork(int screenX, int screenY) {
     system("cls");
+    printf("좌!");
 
     WSADATA wsa;
     SOCKET sockfd;
@@ -144,6 +145,7 @@ int screenStartNetwork(int screenX, int screenY) {
 
         // 서버 응답 수신
         while (1) {
+            print_server_ips(screenX, screenY);
             FD_ZERO(&readfds);
             FD_SET(sockfd, &readfds);
 
