@@ -7,7 +7,7 @@
 void drawBlock(int x, int y, int color) {
     movePos(x, y);
     setColor(color);
-    printf("  ");
+    printf(" ");
     setColor(COLOR_DEFAULT);
 }
 
@@ -15,6 +15,7 @@ void drawText(int x, int y, char* text, int color) {
     setColor(color);
     movePos(x, y);
     printf("%s", text);
+    setColor(COLOR_DEFAULT);
 }
 
 void drawNextBlockUI(int screenX, int screenY) {

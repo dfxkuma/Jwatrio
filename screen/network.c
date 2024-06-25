@@ -54,7 +54,7 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
 void print_server_ips(int screenX, int screenY) {
     printf("Valid server responses:\n");
     system("cls");
-    int menuItems = 1;
+    int menuItems = 3;
     char* menuText[] = {
         " + 새 방 만들기 \n",
     };
