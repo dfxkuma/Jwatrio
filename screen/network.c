@@ -82,7 +82,7 @@ int print_server_ips(int screenX, int screenY) {
     } else if (selectedMenu == 1) {
         printf("server start");
     } else {
-        printf("Selected server: %s\n", serverList[selectedMenu-2].ip);
+        screenStartMultiplay(screenX, screenY, serverList[selectedMenu-2].ip, serverList[selectedMenu-2].name, serverList[selectedMenu-2].playerCount);
     }
 
 
