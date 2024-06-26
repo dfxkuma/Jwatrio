@@ -120,6 +120,7 @@ int screenStartNetwork(int screenX, int screenY) {
     broadcast_addr.sin_port = htons(PORT);
 
     while (1) {
+        int callbackCode  = print_server_ips(screenX, screenY);
         // 메시지 전송
         const char *message = "jtr: udp broadcast check";
         if (sendto(sockfd, message, strlen(message), 0, (struct sockaddr *)&broadcast_addr, sizeof(broadcast_addr)) == SOCKET_ERROR) {
@@ -168,12 +169,11 @@ int screenStartNetwork(int screenX, int screenY) {
                         const char* server_ip = inet_ntoa(from_addr.sin_addr);
 
                         add_server_ip(server_ip, name_part, port_part);
-                        int callbackCode  = print_server_ips(screenX, screenY);
-                        if (callbackCode == -1) {
-                            break;
-                        }
                     }
                 }
+            }
+            if (callbackCode == -1) {
+                break;
             }
         }
     }
