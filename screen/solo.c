@@ -6,6 +6,7 @@
 #include "../screen.h"
 #include "../render/prompt.h"
 #include "../game/engine.h"
+#include "../game/play.h"
 
 int screenStartSoloGame(int screenX, int screenY) {
     system("cls");
@@ -38,11 +39,13 @@ int screenStartSoloGame(int screenX, int screenY) {
             screenStartHome(screenX, screenY);
             break;
         case 0:
+            playSolo40Lines(screenX, screenY);
             break;
         case 1:
-            screenStartSoloGame(screenX, screenY);
+            playSoloBlitz(screenX, screenY);
             break;
         case 2:
-            startNetworkGameEngine(screenX, screenY);
+            playSoloZen(screenX, screenY);
+            break;
     }
 }
