@@ -23,6 +23,9 @@ add_executable(Jwatrio main.c
         server/server.h
         server/server.c
         game/render.h
+        screen/multiplay.c
+        game/event.c
+        utils/typehint.h
 )
 
 target_link_libraries(Jwatrio ws2_32)
