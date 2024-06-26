@@ -54,7 +54,7 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
 void print_server_ips(int screenX, int screenY) {
     system("cls");
     char* menuText[] = {
-        " + 새 방 만들기 \n",
+        " * 서버 검색하기 \n",
     };
 
     for (int i=0; i<server_count; i++) {
@@ -64,7 +64,7 @@ void print_server_ips(int screenX, int screenY) {
     }
     int menuCount = sizeof(menuText) / sizeof(menuText[0]);
 
-    MenuRender* render = createMenuRender(5, 4, menuText, menuCount);
+    MenuRender* render = createMenuRender(5, 4, menuText, menuCount+1);
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
     movePos(screenX + 4, screenY + 4); printf("< 네트워크에서 게임하기 >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");
@@ -84,12 +84,16 @@ void print_server_ips(int screenX, int screenY) {
         screenStartHome(screenX, screenY);
     }
 
-    for (int i = 0; i < server_count; i++) {
-        printf("%s\n", serverList[i].ip);
+    if (selectedMenu > 0) {
+        printf("Selected: %s\n", serverList[selectedMenu - 1].ip);
     }
+
+//    for (int i = 0; i < server_count; i++) {
+//        printf("%s\n", serverList[i].ip);
+//    }
 }
 
-int screenStartNetwork(int screenX, int screenY) {
+int scanNetwork(int screenX, int screenY) {
     system("cls");
 
     WSADATA wsa;
@@ -128,6 +132,7 @@ int screenStartNetwork(int screenX, int screenY) {
     broadcast_addr.sin_port = htons(PORT);
 
     while (1) {
+
         // 메시지 전송
         const char *message = "jtr: udp broadcast check";
         if (sendto(sockfd, message, strlen(message), 0, (struct sockaddr *)&broadcast_addr, sizeof(broadcast_addr)) == SOCKET_ERROR) {
@@ -186,4 +191,10 @@ int screenStartNetwork(int screenX, int screenY) {
     closesocket(sockfd);
     WSACleanup();
     return 0;
+}
+
+int screenStartNetwork(int screenX, int screenY) {
+    while (1) {
+        scanNetwork(screenX, screenY);
+    }
 }
