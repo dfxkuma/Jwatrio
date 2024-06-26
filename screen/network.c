@@ -22,15 +22,6 @@ typedef struct {
     int playerCount;
 } ServerState;
 
-const char* frames[] = { "-", "/", "\\"};
-int numFrames = sizeof(frames) / sizeof(frames[0]);
-int currentFrame = 0;
-
-void renderEmoji(int x, int y) {
-    movePos(x, y); printf("%s", frames[currentFrame]);
-    currentFrame = (currentFrame + 1) % numFrames;
-    Sleep(200);
-}
 
 ServerState serverList[];
 int server_count = 0;
@@ -51,28 +42,28 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
 }
 
 // 서버 IP 주소를 출력하는 함수
-void print_server_ips(int screenX, int screenY) {
-    system("cls");
+int print_server_ips(int screenX, int screenY) {
     char* menuText[] = {
-        " * 서버 검색하기 \n",
+            " + 새 방 만들기 \n",
     };
+    int menuCount = 1;
 
     for (int i=0; i<server_count; i++) {
         char buffer[100];
         sprintf(buffer, "<%d> %s [ %d / 2 ] - %s\n", i + 1, serverList[i].name, serverList[i].playerCount, serverList[i].ip);
         menuText[i+1] = buffer;
+        menuCount++;
     }
-    int menuCount = sizeof(menuText) / sizeof(menuText[0]);
 
-    MenuRender* render = createMenuRender(5, 4, menuText, menuCount+1);
+    MenuRender* render = createMenuRender(5, 4, menuText, menuCount);
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
     movePos(screenX + 4, screenY + 4); printf("< 네트워크에서 게임하기 >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");
-    movePos(screenX + 4, screenY + 5); printf(" 네트워크에서 방 찾는중 "); Sleep(100);
+    movePos(screenX + 4, screenY + 5); printf(" 네트워크에서 방 찾는중 [검색중...]"); Sleep(300);
+    movePos(screenX + 4, screenY + 5); printf(" 네트워크에서 방 찾는중 [검색 완료]"); Sleep(100);
     render->renderMenu(render);
 
     while (1) {
-        renderEmoji(screenX + 16, screenY + 5);
         int callbackCode = render->menuKeyDetect(render);
         if (callbackCode < 0) {
             break;
@@ -83,17 +74,14 @@ void print_server_ips(int screenX, int screenY) {
     if (selectedMenu == -1) {
         screenStartHome(screenX, screenY);
     }
-
-    if (selectedMenu > 0) {
-        printf("Selected: %s\n", serverList[selectedMenu - 1].ip);
+    else if (selectedMenu == 0) {
+        return -1;
     }
 
-//    for (int i = 0; i < server_count; i++) {
-//        printf("%s\n", serverList[i].ip);
-//    }
+
 }
 
-int scanNetwork(int screenX, int screenY) {
+int screenStartNetwork(int screenX, int screenY) {
     system("cls");
 
     WSADATA wsa;
@@ -132,7 +120,6 @@ int scanNetwork(int screenX, int screenY) {
     broadcast_addr.sin_port = htons(PORT);
 
     while (1) {
-
         // 메시지 전송
         const char *message = "jtr: udp broadcast check";
         if (sendto(sockfd, message, strlen(message), 0, (struct sockaddr *)&broadcast_addr, sizeof(broadcast_addr)) == SOCKET_ERROR) {
@@ -146,9 +133,8 @@ int scanNetwork(int screenX, int screenY) {
         tv.tv_sec = TIMEOUT;
         tv.tv_usec = 0;
 
-        // 서버 응답 수신
-        while (1) {
-            print_server_ips(screenX, screenY);
+        while(1) {
+            // 서버 응답 수신
             FD_ZERO(&readfds);
             FD_SET(sockfd, &readfds);
 
@@ -171,6 +157,7 @@ int scanNetwork(int screenX, int screenY) {
                 buffer[recv_len] = '\0';
 
                 // 올바른 응답 확인
+
                 if (strncmp(buffer, "jtr: check response from server|", strlen("jtr: check response from server|")) == 0) {
                     char *response_start = buffer + strlen("jtr: check response from server|");
 
@@ -181,20 +168,18 @@ int scanNetwork(int screenX, int screenY) {
                         const char* server_ip = inet_ntoa(from_addr.sin_addr);
 
                         add_server_ip(server_ip, name_part, port_part);
-                        print_server_ips(screenX, screenY);
+                        int callbackCode  = print_server_ips(screenX, screenY);
+                        if (callbackCode == -1) {
+                            break;
+                        }
                     }
                 }
             }
         }
     }
 
+
     closesocket(sockfd);
     WSACleanup();
     return 0;
-}
-
-int screenStartNetwork(int screenX, int screenY) {
-    while (1) {
-        scanNetwork(screenX, screenY);
-    }
 }
