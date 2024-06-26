@@ -22,14 +22,15 @@ typedef struct {
     int playerCount;
 } ServerState;
 
+int detectServer = 0;
 
 ServerState serverList[MAX_SERVERS];
 int server_count = 0;
 
-void add_server_ip(const char* ip, const char* name, const char* playerCount) {
+int add_server_ip(const char* ip, const char* name, const char* playerCount) {
     for (int i = 0; i < server_count; i++) {
         if (strcmp(serverList[i].ip, ip) == 0) {
-            return; // 이미 배열에 있는 IP는 추가하지 않음
+            return 0; // 이미 배열에 있는 IP는 추가하지 않음
         }
     }
 
@@ -38,6 +39,7 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
         strncpy(serverList[server_count].name, name, INET_ADDRSTRLEN);
         serverList[server_count].playerCount = atoi(playerCount);
         server_count++;
+        return 1;
     }
 }
 
@@ -49,10 +51,10 @@ int print_server_ips(int screenX, int screenY) {
     };
     int menuCount = 2;
 
-    for (int i=1; i<server_count; i++) {
+    for (int i=2; i<server_count+2; i++) {
         char buffer[100];
-        sprintf(buffer, "<%d> %s [ %d / 2 ] - %s\n", i, serverList[i].name, serverList[i].playerCount, serverList[i].ip);
-        menuText[i+1] = buffer;
+        sprintf(buffer, "<%d> %s [ %d / 2 ] - %s\n", i-1, serverList[i-2].name, serverList[i-2].playerCount, serverList[i-2].ip);
+        menuText[i] = buffer;
         menuCount++;
     }
 
@@ -60,7 +62,6 @@ int print_server_ips(int screenX, int screenY) {
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
     movePos(screenX + 4, screenY + 4); printf("< 네트워크에서 게임하기 >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");
-    movePos(screenX + 4, screenY + 5); printf(" 네트워크에서 방 찾는중 [검색중...]"); Sleep(300);
     movePos(screenX + 4, screenY + 5); printf(" 네트워크에서 방 찾는중 [검색 완료]"); Sleep(100);
     render->renderMenu(render);
 
@@ -76,10 +77,12 @@ int print_server_ips(int screenX, int screenY) {
         screenStartHome(screenX, screenY);
     }
     else if (selectedMenu == 0) {
+        movePos(screenX + 4, screenY + 5); printf(" 네트워크에서 방 찾는중 [검색중...]"); Sleep(300);
         return -1;
+    } else if (selectedMenu == 1) {
+        printf("server start");
     } else {
-        // 서버 선택
-        printf("Selected server: %s\n", serverList[selectedMenu-1].ip);
+        printf("Selected server: %s\n", serverList[selectedMenu-2].ip);
     }
 
 
@@ -124,7 +127,7 @@ int screenStartNetwork(int screenX, int screenY) {
     broadcast_addr.sin_port = htons(PORT);
 
     while (1) {
-        int callbackCode  = print_server_ips(screenX, screenY);
+        int callbackCode = print_server_ips(screenX, screenY);
         // 메시지 전송
         const char *message = "jtr: udp broadcast check";
         if (sendto(sockfd, message, strlen(message), 0, (struct sockaddr *)&broadcast_addr, sizeof(broadcast_addr)) == SOCKET_ERROR) {
@@ -171,10 +174,12 @@ int screenStartNetwork(int screenX, int screenY) {
 
                     if (name_part != NULL && port_part != NULL) {
                         const char* server_ip = inet_ntoa(from_addr.sin_addr);
-
-                        add_server_ip(server_ip, name_part, port_part);
+                        detectServer = add_server_ip(server_ip, name_part, port_part);
                     }
                 }
+            }
+            if (detectServer == 1) {
+                break;
             }
             if (callbackCode == -1) {
                 break;
