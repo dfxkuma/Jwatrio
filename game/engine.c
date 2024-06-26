@@ -1,16 +1,24 @@
 #include<stdio.h>
-#include <winsock2.h>
 #include<windows.h>
 #include<conio.h>
 #include<time.h>
 #include<stdlib.h>
-#include <ws2tcpip.h>
 
+#include "engine.h"
 #include "draw.h"
 #include "../utils/color.h"
 #include "../utils/keyboard.h"
 #include "../render/text.h"
-#include "../utils/typehint.h"
+
+#define false 0
+#define true 1
+
+#define ACTIVE_BLOCK -2 // 게임판배열에 저장될 블록의 상태들
+#define CEILLING -1     // 블록이 이동할 수 있는 공간은 0 또는 음의 정수료 표현
+#define EMPTY 0         // 블록이 이동할 수 없는 공간은 양수로 표현
+#define WALL 1
+#define BOTTOM_WALL 3
+#define INACTIVE_BLOCK 2 // 이동이 완료된 블록값
 
 #define MAIN_X 11 //게임판 가로크기
 #define MAIN_Y 24 //게임판 세로크기
@@ -39,6 +47,7 @@ int key; //키보드로 입력받은 키값을 저장
 
 int speed; //게임진행속도
 int level; //현재 level
+int level_goal; //다음레벨로 넘어가기 위한 목표점수
 int cnt; //현재 레벨에서 제거한 줄 수를 저장
 int score; //현재 점수
 int last_score=0; //마지막게임점수
@@ -53,121 +62,22 @@ int crush_on=0; //현재 이동중인 블록이 충돌상태인지 알려주는 
 int level_up_on=0; //다음레벨로 진행(현재 레벨목표가 완료되었음을) 알리는 flag
 int space_key_on=0; //hard drop상태임을 알려주는 flag
 
-
-void reset(void); //게임판 초기화
-void reset_main(void); //메인 게임판(main_org[][]를 초기화)
-void reset_main_cpy(void); //copy 게임판(main_cpy[][]를 초기화)
-void draw_map(void); //게임 전체 인터페이스를 표시
-void draw_main(void); //게임판을 그림
-void new_block(void); //새로운 블록을 하나 만듦
-void check_key(int screenX, int screenY); //키보드로 키를 입력받음
-void drop_block(void); //블록을 아래로 떨어트림
-int check_crush(int bx, int by, int rotation); //bx, by위치에 rotation회전값을 같는 경우 충돌 판단
-void move_block(int dir); //dir방향으로 블록을 움직임
-void check_line(void); //줄이 가득찼는지를 판단하고 지움
-void check_level_up(void); //레벨목표가 달성되었는지를 판단하고 levelup시킴
-void check_game_over(void); //게임오버인지 판단하고 게임오버를 진행
-void pause(int screenX, int screenY);//게임을 일시정지시킴
-void handle_server(char *ip, int port); // 서버 핸들
-
-SOCKET server_fd;
-
-DWORD WINAPI receiveGameState(LPVOID arg) {
-    char buffer[BUFFER_SIZE];
-
-    while (1) {
-        int valread = recv(server_fd, buffer, BUFFER_SIZE, 0);
-        if (valread > 0) {
-            buffer[valread] = '\0';
-            printf("Server: %s\n", buffer);
-        } else if (valread == 0) {
-            printf("Server disconnected.\n");
-            break;
-        } else {
-            printf("recv failed: %d\n", WSAGetLastError());
-            break;
-        }
-    }
-
-    return 0;
-}
-
-void sendCommand(const char *command) {
-    send(server_fd, command, strlen(command), 0);
-}
-
-void handle_server(char *ip, int port){
-    WSADATA wsa;
-    struct sockaddr_in server_address;
-    HANDLE recv_thread;
-
-    // Initialize Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-        printf("Failed. Error Code: %d\n", WSAGetLastError());
-        return;
-    }
-
-    // Create socket
-    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
-        printf("Could not create socket: %d\n", WSAGetLastError());
-        WSACleanup();
-        return;
-    }
-
-    server_address.sin_family = AF_INET;
-    server_address.sin_port = htons(port);
-    printf("IP: %s\n", ip);
-    printf("Port: %d\n", port);
-    if (InetPton(AF_INET, ip, &server_address.sin_addr) <= 0) {
-        printf("Invalid address/ Address not supported\n");
-        closesocket(server_fd);
-        WSACleanup();
-        return;
-    }
-
-    // Connect to server
-    if (connect(server_fd, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
-        printf("Connection failed: %d\n", WSAGetLastError());
-        closesocket(server_fd);
-        WSACleanup();
-        return;
-    }
-
-    printf("Connected to server.\n");
-
-    // Start receiving thread
-    recv_thread = CreateThread(NULL, 0, receiveGameState, NULL, 0, NULL);
-    if (recv_thread == NULL) {
-        printf("Error creating receive thread: %d\n", GetLastError());
-        closesocket(server_fd);
-        WSACleanup();
-        return;
-    }
-}
-int starGameEngine(int screenX, int screenY) {
-
-}
-
-int startNetworkGameEngine(int screenX, int screenY, char* ip, int port){
+int startNetworkGameEngine(int screenX, int screenY, MultiGameSetting setting) {
     system("cls");
 
-    printf("함수 실행 됨");
-//    handle_server(ip, port);
-
     int i;
-
     srand((unsigned)time(NULL)); //난수표생성
     setCursorType(NOCURSOR); //커서 없앰
     reset(); //게임판 리셋
     drawNextBlockUI(screenX, screenY);
-    drawInfoTextUI();
+    drawInfoTextUI(40);
 
     while(1) {
         for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
             check_key(screenX, screenY); //키입력확인
             draw_main(); //화면을 그림
             Sleep(speed); //게임속도조절
-            if(crush_on&&check_crush(bx,by+1, b_rotation)==FALSE) Sleep(100);
+            if(crush_on&&check_crush(bx,by+1, b_rotation)==false) Sleep(100);
             //블록이 충돌중인경우 추가로 이동및 회전할 시간을 갖음
             if(space_key_on==1) { //스페이스바를 누른경우(hard drop) 추가로 이동및 회전할수 없음 break;
                 space_key_on=0;
@@ -187,6 +97,7 @@ void reset(void){
 
     level=1; //각종변수 초기화
     score=0;
+    level_goal=1000;
     key=0;
     crush_on=0;
     cnt=0;
@@ -194,9 +105,7 @@ void reset(void){
 
     system("cls"); //화면지움
     reset_main(); // main_org를 초기화
-    draw_map(); // 게임화면을 그림
     draw_main(); // 게임판을 그림
-
 
 
     b_type_next=rand()%7; //다음번에 나올 블록 종류를 랜덤하게 생성
@@ -235,28 +144,6 @@ void reset_main_cpy(void){ //main_cpy를 초기화
     }
 }
 
-void draw_map(void){ //게임 상태 표시를 나타내는 함수
-//    int y=3;             // level, goal, score만 게임중에 값이 바뀔수 도 있음 그 y값을 따로 저장해둠
-//    // 그래서 혹시 게임 상태 표시 위치가 바뀌어도 그 함수에서 안바꿔도 되게..
-//    gotoxy(STATUS_X_ADJ, STATUS_Y_LEVEL=y); printf(" LEVEL : %5d", level);
-//    gotoxy(STATUS_X_ADJ, STATUS_Y_GOAL=y+1); printf(" GOAL  : %5d", 10-cnt);
-//    gotoxy(STATUS_X_ADJ, y+2); printf("+-  N E X T  -+ ");
-//    gotoxy(STATUS_X_ADJ, y+3); printf("|             | ");
-//    gotoxy(STATUS_X_ADJ, y+4); printf("|             | ");
-//    gotoxy(STATUS_X_ADJ, y+5); printf("|             | ");
-//    gotoxy(STATUS_X_ADJ, y+6); printf("|             | ");
-//    gotoxy(STATUS_X_ADJ, y+7); printf("+-- -  -  - --+ ");
-//    gotoxy(STATUS_X_ADJ, y+8); printf(" YOUR SCORE :");
-//    gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE=y+9); printf("        %6d", score);
-//    gotoxy(STATUS_X_ADJ, y+10); printf(" LAST SCORE :");
-//    gotoxy(STATUS_X_ADJ, y+11); printf("        %6d", last_score);
-//    gotoxy(STATUS_X_ADJ, y+12); printf(" BEST SCORE :");
-//    gotoxy(STATUS_X_ADJ, y+13); printf("        %6d", best_score);
-//    gotoxy(STATUS_X_ADJ, y+15); printf("  △   : Shift        SPACE : Hard Drop");
-//    gotoxy(STATUS_X_ADJ, y+16); printf("◁  ▷ : Left / Right   P   : Pause");
-//    gotoxy(STATUS_X_ADJ, y+17); printf("  ▽   : Soft Drop     ESC  : Quit");
-//    gotoxy(STATUS_X_ADJ, y+20);printf("blog.naver.com/azure0777");
-}
 
 void draw_main(void){ //게임판 그리는 함수
     int i, j;
@@ -336,18 +223,18 @@ void check_key(int screenX, int screenY){
             do{key=getch();} while(key==224);//방향키지시값을 버림
             switch(key){
                 case KEY_LEFT: //왼쪽키 눌렀을때
-                    if(check_crush(bx-1,by,b_rotation)==TRUE) move_block(KEY_LEFT);
+                    if(check_crush(bx-1,by,b_rotation)==true) move_block(KEY_LEFT);
                     break;                            //왼쪽으로 갈 수 있는지 체크 후 가능하면 이동
                 case KEY_RIGHT: //오른쪽 방향키 눌렀을때- 위와 동일하게 처리됨
-                    if(check_crush(bx+1,by,b_rotation)==TRUE) move_block(KEY_RIGHT);
+                    if(check_crush(bx+1,by,b_rotation)==true) move_block(KEY_RIGHT);
                     break;
                 case KEY_DOWN: //아래쪽 방향키 눌렀을때-위와 동일하게 처리됨
-                    if(check_crush(bx,by+1,b_rotation)==TRUE) move_block(KEY_DOWN);
+                    if(check_crush(bx,by+1,b_rotation)==true) move_block(KEY_DOWN);
                     break;
                 case KEY_UP: //위쪽 방향키 눌렀을때
-                    if(check_crush(bx,by,(b_rotation+1)%4)==TRUE) move_block(KEY_UP);
+                    if(check_crush(bx,by,(b_rotation+1)%4)==true) move_block(KEY_UP);
                         //회전할 수 있는지 체크 후 가능하면 회전
-                    else if(crush_on==1&&check_crush(bx,by-1,(b_rotation+1)%4)==TRUE) move_block(100);
+                    else if(crush_on==1&&check_crush(bx,by-1,(b_rotation+1)%4)==true) move_block(100);
             }                    //바닥에 닿은 경우 위쪽으로 한칸띄워서 회전이 가능하면 그렇게 함(특수동작)
         }
         else{ //방향키가 아닌경우
@@ -377,8 +264,8 @@ void check_key(int screenX, int screenY){
 void drop_block(void){
     int i,j;
 
-    if(crush_on&&check_crush(bx,by+1, b_rotation)==TRUE) crush_on=0; //밑이 비어있으면 crush flag 끔
-    if(crush_on&&check_crush(bx,by+1, b_rotation)==FALSE){ //밑이 비어있지않고 crush flag가 켜저있으면
+    if(crush_on&&check_crush(bx,by+1, b_rotation)==true) crush_on=0; //밑이 비어있으면 crush flag 끔
+    if(crush_on&&check_crush(bx,by+1, b_rotation)==false){ //밑이 비어있지않고 crush flag가 켜저있으면
         for(i=0;i<MAIN_Y;i++){ //현재 조작중인 블럭을 굳힘
             for(j=0;j<MAIN_X;j++){
                 if(main_org[i][j]==ACTIVE_BLOCK) main_org[i][j]=INACTIVE_BLOCK;
@@ -391,8 +278,8 @@ void drop_block(void){
         drawInfoPIECES(used_blocks);
         return; //함수 종료
     }
-    if(check_crush(bx,by+1, b_rotation)==TRUE) move_block(KEY_DOWN); //밑이 비어있으면 밑으로 한칸 이동
-    if(check_crush(bx,by+1, b_rotation)==FALSE) crush_on++; //밑으로 이동이 안되면  crush flag를 켬
+    if(check_crush(bx,by+1, b_rotation)==true) move_block(KEY_DOWN); //밑이 비어있으면 밑으로 한칸 이동
+    if(check_crush(bx,by+1, b_rotation)==false) crush_on++; //밑으로 이동이 안되면  crush flag를 켬
 }
 
 
@@ -401,10 +288,10 @@ int check_crush(int bx, int by, int b_rotation){ //지정된 좌표와 회전값
 
     for(i=0;i<4;i++){
         for(j=0;j<4;j++){ //지정된 위치의 게임판과 블럭모양을 비교해서 겹치면 false를 리턴
-            if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1&&main_org[by+i][bx+j]>0) return TRUE;
+            if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1&&main_org[by+i][bx+j]>0) return false;
         }
     }
-    return FALSE; //하나도 안겹치면 true리턴
+    return true; //하나도 안겹치면 true리턴
 };
 
 void move_block(int dir){ //블록을 이동시킴
@@ -498,7 +385,7 @@ void check_line(void){
         }
         if(block_amount==MAIN_X-2){ //블록이 가득 찬 경우
             crushed_lines++; //지운 줄 수 증가
-            drawInfoLINES(crushed_lines, 40);
+            drawInfoLINES(crushed_lines,40);
             if(level_up_on==0){ //레벨업상태가 아닌 경우에(레벨업이 되면 자동 줄삭제가 있음)
                 score+=100*level; //점수추가
                 cnt++; //지운 줄 갯수 카운트 증가
@@ -657,9 +544,8 @@ void pause(int screenX, int screenY){ //게임 일시정지 함수
     system("cls"); //화면 지우고 새로 그림
     reset_main_cpy();
     drawNextBlockUI(screenX, screenY);
-    drawInfoTextUI();
+    drawInfoTextUI(40);
     draw_main();
-    draw_map();
 
     for(i=1;i<3;i++){ // 다음블록 그림
         for(j=0;j<4;j++){

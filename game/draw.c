@@ -39,12 +39,14 @@ void drawNextBlockUI(int screenX, int screenY) {
     drawText(screenX + 21, screenY + 5, " ", 240);
 }
 
-void drawInfoTextUI() {
+void drawInfoTextUI(int linesMaxCount) {
     // Draw info
+    char maxLines[20];
+    sprintf(maxLines, "0/%d", linesMaxCount);
     drawText(1, 20,  "PIECES", 7);
-    drawText(1, 21, "0, 0.00/S", 7);
+    drawText(1, 21, "0", 7);
     drawText(1, 22, "LINES", 7);
-    drawText( 1, 23, "0/40", 7);
+    drawText( 1, 23, maxLines, 7);
     drawText(1, 24, "TIME", 7);
     drawText(1, 25, "0:13.233", 7);
 

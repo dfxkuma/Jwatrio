@@ -8,7 +8,7 @@ void drawBlock(int x, int y, int color);
 void drawText(int x, int y, char* text, int color);
 void drawHOLDUI(int screenX, int screenY);
 void drawGameUI(int screenX, int screenY);
-void drawInfoTextUI();
+void drawInfoTextUI(int linesMaxCount);
 void drawNextBlockUI(int screenX, int screenY);
 
 void drawInfoPIECES(int count);
