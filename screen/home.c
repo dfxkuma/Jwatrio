@@ -10,15 +10,15 @@
 int screenStartHome(int screenX, int screenY) {
     system("cls");
 
-    int menuItems = 4;
-    char* menuText[] = {
+    char *menuText[] = {
             " MP    | MULTIPLAY - PLAY ONLINE WITH FRIENDS \n",
             " 1P    | SOLO - CHALLENGE YOURSELF            \n",
             " CFG   | CONFIG - TWEAK YOUR JWATRIO          \n",
             " ABOUT | ALL ABOUT JWATRIO                    \n",
     };
+    int menuCount = sizeof(menuText) / sizeof(menuText[0]);
 
-    MenuRender* render = createMenuRender(3, 4, menuText, menuItems);
+    MenuRender* render = createMenuRender(3, 4, menuText, menuCount);
     movePos(screenX + 12, screenY + 5); printf("HOME"); Sleep(100);
     movePos(screenX + 9, screenY + 2); printf("WELCOME TO JWATRIO!"); Sleep(100);
     render->renderMenu(render);
@@ -38,12 +38,11 @@ int screenStartHome(int screenX, int screenY) {
             screenStartSoloGame(screenX, screenY);
             break;
         case 2:
-            screenStartGame(screenX, screenY);
+            printf("Config");
             break;
         case 3:
-//            startGameEngine(screenX, screenY);/
+            printf("About");
             break;
         case 4:
-            screenStartConnectServer(screenX, screenY);
     }
 }

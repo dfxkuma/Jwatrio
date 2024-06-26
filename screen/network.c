@@ -52,20 +52,19 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
 
 // 서버 IP 주소를 출력하는 함수
 void print_server_ips(int screenX, int screenY) {
-    printf("Valid server responses:\n");
     system("cls");
-    int menuItems = 3;
     char* menuText[] = {
         " + 새 방 만들기 \n",
     };
 
     for (int i=0; i<server_count; i++) {
         char buffer[100];
-        sprintf(buffer, "<%d> %s(%s) [ %d / 2 ]\n", i + 1, serverList[i].name, serverList[i].ip, serverList[i].playerCount);
+        sprintf(buffer, "<%d> %s [ %d / 2 ] - %s\n", i + 1, serverList[i].name, serverList[i].playerCount, serverList[i].ip);
         menuText[i+1] = buffer;
     }
+    int menuCount = sizeof(menuText) / sizeof(menuText[0]);
 
-    MenuRender* render = createMenuRender(5, 4, menuText, menuItems);
+    MenuRender* render = createMenuRender(5, 4, menuText, menuCount);
     movePos(screenX + 6, screenY + 1); printf("J W A T R I O"); Sleep(100);
     movePos(screenX + 4, screenY + 4); printf("< 네트워크에서 게임하기 >"); Sleep(100);
     movePos(screenX + 4, screenY + 5); printf("                                  ");
@@ -92,7 +91,6 @@ void print_server_ips(int screenX, int screenY) {
 
 int screenStartNetwork(int screenX, int screenY) {
     system("cls");
-    printf("좌!");
 
     WSADATA wsa;
     SOCKET sockfd;
