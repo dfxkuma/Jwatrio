@@ -23,7 +23,7 @@ typedef struct {
 } ServerState;
 
 
-ServerState serverList[];
+ServerState serverList[MAX_SERVERS];
 int server_count = 0;
 
 void add_server_ip(const char* ip, const char* name, const char* playerCount) {
@@ -44,13 +44,14 @@ void add_server_ip(const char* ip, const char* name, const char* playerCount) {
 // 서버 IP 주소를 출력하는 함수
 int print_server_ips(int screenX, int screenY) {
     char* menuText[] = {
-            " + 새 방 만들기 \n",
+            " * 같은 네트워크에서 서버 검색하기 \n",
+            " + 내 컴퓨터에서 서버 열기 \n"
     };
-    int menuCount = 1;
+    int menuCount = 2;
 
-    for (int i=0; i<server_count; i++) {
+    for (int i=1; i<server_count; i++) {
         char buffer[100];
-        sprintf(buffer, "<%d> %s [ %d / 2 ] - %s\n", i + 1, serverList[i].name, serverList[i].playerCount, serverList[i].ip);
+        sprintf(buffer, "<%d> %s [ %d / 2 ] - %s\n", i, serverList[i].name, serverList[i].playerCount, serverList[i].ip);
         menuText[i+1] = buffer;
         menuCount++;
     }
@@ -76,6 +77,9 @@ int print_server_ips(int screenX, int screenY) {
     }
     else if (selectedMenu == 0) {
         return -1;
+    } else {
+        // 서버 선택
+        printf("Selected server: %s\n", serverList[selectedMenu-1].ip);
     }
 
 
