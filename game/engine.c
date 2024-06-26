@@ -1,22 +1,15 @@
 #include<stdio.h>
+#include <winsock2.h>
 #include<windows.h>
 #include<conio.h>
 #include<time.h>
 #include<stdlib.h>
-#include <winsock2.h>
+#include <ws2tcpip.h>
 
 #include "draw.h"
 #include "../utils/color.h"
-
-
-#define LEFT 75 //좌로 이동    //키보드값들
-#define RIGHT 77 //우로 이동
-#define UP 72 //회전
-#define DOWN 80 //soft drop
-#define SPACE 32 //hard drop
-#define p 112 //일시정지
-#define P 80 //일시정지
-#define ESC 27 //게임종료
+#include "../utils/keyboard.h"
+#include "../render/text.h"
 
 #define false 0
 #define true 1
@@ -33,28 +26,13 @@
 #define MAIN_X_ADJ 3 //게임판 위치조정
 #define MAIN_Y_ADJ 1 //게임판 위치조정
 
+#define BUFFER_SIZE 2048 // 서버 버퍼
+
 #define STATUS_X_ADJ MAIN_X_ADJ+MAIN_X+1 //게임정보표시 위치조정
 
 int STATUS_Y_GOAL; //GOAL 정보표시위치Y 좌표 저장
 int STATUS_Y_LEVEL; //LEVEL 정보표시위치Y 좌표 저장
 int STATUS_Y_SCORE; //SCORE 정보표시위치Y 좌표 저장
-
-int blocks[7][4][4][4]={
-        {{0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0},{0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0},
-                {0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0},{0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0}},
-        {{0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0},{0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0},
-                {0,0,0,0,0,0,0,0,1,1,1,1,0,0,0,0},{0,1,0,0,0,1,0,0,0,1,0,0,0,1,0,0}},
-        {{0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0},{0,0,0,0,0,0,1,0,0,1,1,0,0,1,0,0},
-                {0,0,0,0,1,1,0,0,0,1,1,0,0,0,0,0},{0,0,0,0,0,0,1,0,0,1,1,0,0,1,0,0}},
-        {{0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0},{0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0},
-                {0,0,0,0,0,1,1,0,1,1,0,0,0,0,0,0},{0,0,0,0,1,0,0,0,1,1,0,0,0,1,0,0}},
-        {{0,0,0,0,0,0,1,0,1,1,1,0,0,0,0,0},{0,0,0,0,1,1,0,0,0,1,0,0,0,1,0,0},
-                {0,0,0,0,0,0,0,0,1,1,1,0,1,0,0,0},{0,0,0,0,0,1,0,0,0,1,0,0,0,1,1,0}},
-        {{0,0,0,0,1,0,0,0,1,1,1,0,0,0,0,0},{0,0,0,0,0,1,0,0,0,1,0,0,1,1,0,0},
-                {0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,0},{0,0,0,0,0,1,1,0,0,1,0,0,0,1,0,0}},
-        {{0,0,0,0,0,1,0,0,1,1,1,0,0,0,0,0},{0,0,0,0,0,1,0,0,0,1,1,0,0,1,0,0},
-                {0,0,0,0,0,0,0,0,1,1,1,0,0,1,0,0},{0,0,0,0,0,1,0,0,1,1,0,0,0,1,0,0}}
-}; //블록모양 저장 4*4공간에 블록을 표현 blcoks[b_type][b_rotation][i][j]로 사용
 
 int b_type; //블록 종류를 저장
 int b_rotation; //블록 회전값 저장
@@ -80,145 +58,130 @@ int new_block_on=0; //새로운 블럭이 필요함을 알리는 flag
 int crush_on=0; //현재 이동중인 블록이 충돌상태인지 알려주는 flag
 int level_up_on=0; //다음레벨로 진행(현재 레벨목표가 완료되었음을) 알리는 flag
 int space_key_on=0; //hard drop상태임을 알려주는 flag
-int hold_block_on = 0; // hold 키를 눌렀는가?
-int hold_block = 0; // hold된 블록이 있는가?
-int hold_block_on_data[4][4];
 
 
-void title(void); //게임시작화면
 void reset(void); //게임판 초기화
 void reset_main(void); //메인 게임판(main_org[][]를 초기화)
 void reset_main_cpy(void); //copy 게임판(main_cpy[][]를 초기화)
 void draw_map(void); //게임 전체 인터페이스를 표시
 void draw_main(void); //게임판을 그림
 void new_block(void); //새로운 블록을 하나 만듦
-void check_key(void); //키보드로 키를 입력받음
+void check_key(int screenX, int screenY); //키보드로 키를 입력받음
 void drop_block(void); //블록을 아래로 떨어트림
 int check_crush(int bx, int by, int rotation); //bx, by위치에 rotation회전값을 같는 경우 충돌 판단
 void move_block(int dir); //dir방향으로 블록을 움직임
 void check_line(void); //줄이 가득찼는지를 판단하고 지움
 void check_level_up(void); //레벨목표가 달성되었는지를 판단하고 levelup시킴
 void check_game_over(void); //게임오버인지 판단하고 게임오버를 진행
-void pause(void);//게임을 일시정지시킴
+void pause(int screenX, int screenY);//게임을 일시정지시킴
+void handle_server(char *ip, int port); // 서버 핸들
 
-void gotoxy(int x,int y) { //gotoxy함수
-    COORD pos={2*x,y};
-    SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),pos);
+SOCKET server_fd;
+
+DWORD WINAPI receiveGameState(LPVOID arg) {
+    char buffer[BUFFER_SIZE];
+
+    while (1) {
+        int valread = recv(server_fd, buffer, BUFFER_SIZE, 0);
+        if (valread > 0) {
+            buffer[valread] = '\0';
+            printf("Server: %s\n", buffer);
+        } else if (valread == 0) {
+            printf("Server disconnected.\n");
+            break;
+        } else {
+            printf("recv failed: %d\n", WSAGetLastError());
+            break;
+        }
+    }
+
+    return 0;
 }
 
-typedef enum { NOCURSOR, SOLIDCURSOR, NORMALCURSOR } CURSOR_TYPE; //커서숨기는 함수에 사용되는 열거형
-void setcursortype(CURSOR_TYPE c){ //커서숨기는 함수
-    CONSOLE_CURSOR_INFO CurInfo;
+void sendCommand(const char *command) {
+    send(server_fd, command, strlen(command), 0);
+}
 
-    switch (c) {
-        case NOCURSOR:
-            CurInfo.dwSize=1;
-            CurInfo.bVisible=FALSE;
-            break;
-        case SOLIDCURSOR:
-            CurInfo.dwSize=100;
-            CurInfo.bVisible=TRUE;
-            break;
-        case NORMALCURSOR:
-            CurInfo.dwSize=20;
-            CurInfo.bVisible=TRUE;
-            break;
+void handle_server(char *ip, int port){
+    WSADATA wsa;
+    struct sockaddr_in server_address;
+    HANDLE recv_thread;
+
+    // Initialize Winsock
+    if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
+        printf("Failed. Error Code: %d\n", WSAGetLastError());
+        return;
     }
-    SetConsoleCursorInfo(GetStdHandle(STD_OUTPUT_HANDLE),&CurInfo);
+
+    // Create socket
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+        printf("Could not create socket: %d\n", WSAGetLastError());
+        WSACleanup();
+        return;
+    }
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(port);
+    printf("IP: %s\n", ip);
+    printf("Port: %d\n", port);
+    if (InetPton(AF_INET, ip, &server_address.sin_addr) <= 0) {
+        printf("Invalid address/ Address not supported\n");
+        closesocket(server_fd);
+        WSACleanup();
+        return;
+    }
+
+    // Connect to server
+    if (connect(server_fd, (struct sockaddr *)&server_address, sizeof(server_address)) < 0) {
+        printf("Connection failed: %d\n", WSAGetLastError());
+        closesocket(server_fd);
+        WSACleanup();
+        return;
+    }
+
+    printf("Connected to server.\n");
+
+    // Start receiving thread
+    recv_thread = CreateThread(NULL, 0, receiveGameState, NULL, 0, NULL);
+    if (recv_thread == NULL) {
+        printf("Error creating receive thread: %d\n", GetLastError());
+        closesocket(server_fd);
+        WSACleanup();
+        return;
+    }
 }
 
 int startGameEngine(int screenX, int screenY, char* ip, int port){
     system("cls");
 
-//    WSADATA wsa;
-//    SOCKET sockfd;
-//    struct sockaddr_in server_addr;
+    printf("함수 실행 됨");
+    handle_server(ip, port);
 
-    int i;
-
-//    server_addr.sin_family = AF_INET;
-//    server_addr.sin_addr.s_addr = inet_addr(ip);
-//    server_addr.sin_port = htons(port);
+//    int i;
 //
-//    if (connect(sockfd, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
-//        printf("Failed to connect to server. Error Code : %d\n", WSAGetLastError());
-//        closesocket(sockfd);
-//        WSACleanup();
-//        return 1;
+//    srand((unsigned)time(NULL)); //난수표생성
+//    setCursorType(NOCURSOR); //커서 없앰
+//    reset(); //게임판 리셋
+//    drawNextBlockUI(screenX, screenY);
+//    drawInfoTextUI();
+//
+//    while(1) {
+//        for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
+//            check_key(screenX, screenY); //키입력확인
+//            draw_main(); //화면을 그림
+//            Sleep(speed); //게임속도조절
+//            if(crush_on&&check_crush(bx,by+1, b_rotation)==false) Sleep(100);
+//            //블록이 충돌중인경우 추가로 이동및 회전할 시간을 갖음
+//            if(space_key_on==1) { //스페이스바를 누른경우(hard drop) 추가로 이동및 회전할수 없음 break;
+//                space_key_on=0;
+//                break;
+//            }
+//        }
+//        drop_block(); // 블록을 한칸 내림
+//        check_level_up(); // 레벨업을 체크
+//        check_game_over(); //게임오버를 체크
+//        if(new_block_on==1) new_block(); // 뉴 블럭 flag가 있는 경우 새로운 블럭 생성
 //    }
-
-    srand((unsigned)time(NULL)); //난수표생성
-    setcursortype(NOCURSOR); //커서 없앰
-    reset(); //게임판 리셋
-//    drawText(0, screenY, "  HOLD       ", 240);
-//    drawText(0, screenY + 1, " ", 240);
-//    drawText(0, screenY + 2, " ", 240);
-//    drawText(0, screenY + 3, " ", 240);
-//    drawText(0, screenY + 4, " ", 240);
-//
-//    drawText(6, screenY + 1, " ", 240);
-//    drawText(6, screenY + 2, " ", 240);
-//    drawText(6, screenY + 3, " ", 240);
-//    drawText(6, screenY + 4, " ", 240);
-//
-//    drawText(0, screenY + 5, "  ", 240);
-//    drawText(1, screenY + 5, "  ", 240);
-//    drawText(2, screenY + 5, "  ", 240);
-//    drawText(3, screenY + 5, "  ", 240);
-//    drawText(4, screenY + 5, "  ", 240);
-//    drawText(5, screenY + 5, "  ", 240);
-//    drawText(6, screenY + 5, " ", 240);
-
-
-
-    // Draw next pieces
-
-    drawText(screenX + 15, screenY, "  NEXT       ", 240);
-    drawText(screenX + 15, screenY + 1, " ", 240);
-    drawText(screenX + 15, screenY + 2, " ", 240);
-    drawText(screenX + 15, screenY + 3, " ", 240);
-    drawText(screenX + 15, screenY + 4, " ", 240);
-
-    drawText(screenX + 21, screenY + 1, " ", 240);
-    drawText(screenX + 21, screenY + 2, " ", 240);
-    drawText(screenX + 21, screenY + 3, " ", 240);
-    drawText(screenX + 21, screenY + 4, " ", 240);
-
-    drawText(screenX + 15, screenY + 5, "  ", 240);
-    drawText(screenX + 16, screenY + 5, "  ", 240);
-    drawText(screenX + 17, screenY + 5, "  ", 240);
-    drawText(screenX + 18, screenY + 5, "  ", 240);
-    drawText(screenX + 19, screenY + 5, "  ", 240);
-    drawText(screenX + 20, screenY + 5, "  ", 240);
-    drawText(screenX + 21, screenY + 5, " ", 240);
-
-
-
-    // Draw info
-    drawText(1, 20,  "PIECES", 7);
-    drawText(1, 21, "0, 0.00/S", 7);
-    drawText(1, 22, "LINES", 7);
-    drawText( 1, 23, "0/40", 7);
-    drawText(1, 24, "TIME", 7);
-    drawText(1, 25, "0:13.233", 7);
-
-    while(1){
-        for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
-            check_key(); //키입력확인
-            draw_main(); //화면을 그림
-            Sleep(speed); //게임속도조절
-            if(crush_on&&check_crush(bx,by+1, b_rotation)==false) Sleep(100);
-            //블록이 충돌중인경우 추가로 이동및 회전할 시간을 갖음
-            if(space_key_on==1) { //스페이스바를 누른경우(hard drop) 추가로 이동및 회전할수 없음 break;
-                space_key_on=0;
-                break;
-            }
-        }
-        drop_block(); // 블록을 한칸 내림
-        check_level_up(); // 레벨업을 체크
-        check_game_over(); //게임오버를 체크
-        if(new_block_on==1) new_block(); // 뉴 블럭 flag가 있는 경우 새로운 블럭 생성
-    }
 }
 
 
@@ -307,26 +270,24 @@ void draw_main(void){ //게임판 그리는 함수
     }
     for(i=0;i<MAIN_Y+1;i++){
         for(j=0;j<MAIN_X;j++){
-            gotoxy(20,30);
-            printf("hold_block_on: %d hold_block: %d", hold_block_on, hold_block);
             if(main_cpy[i][j]!=main_org[i][j]){ //cpy랑 비교해서 값이 달라진 부분만 새로 그려줌.
                 //이게 없으면 게임판전체를 계속 그려서 느려지고 반짝거림
-                gotoxy(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i);
                 switch(main_org[i][j]){
                     case BOTTOM_WALL: //바닥벽모양
                         printf("▔");
+                        drawText(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i,"▔", COLOR_DEFAULT);
                         break;
                     case EMPTY: //빈칸모양
-                        printf("  ");
+                        drawText(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i,"  ", COLOR_DEFAULT);
                         break;
                     case CEILLING: //천장모양
-                        printf(". ");
+                        drawText(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i,". ", COLOR_DEFAULT);
                         break;
                     case WALL: //벽모양
-                        printf("║");
+                        drawText(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i,"║", COLOR_DEFAULT);
                         break;
                     case INACTIVE_BLOCK: //굳은 블럭 모양
-                        printf("□");
+                        drawText(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i,"□", COLOR_DEFAULT);
                         break;
                     case ACTIVE_BLOCK: //움직이고있는 블럭 모양
                         drawText(MAIN_X_ADJ+5+j,MAIN_Y_ADJ+2+i,"■", COLOR_DEFAULT);
@@ -353,77 +314,62 @@ void new_block(void){ //새로운 블록 생성
 
     new_block_on=0; //new_block flag를 끔
 
-    if (hold_block_on && hold_block) {
-        for(i=0;i<4;i++){ //게임판 bx, by위치에 블럭생성
-            for(j=0;j<4;j++){
-                if(hold_block_on_data[i][j]==1) main_org[by+i][bx+j]=ACTIVE_BLOCK;
-            }
-        }
-        hold_block = 0;
-        hold_block_on = 0;
-    } else {
-        for(i=0;i<4;i++){ //게임판 bx, by위치에 블럭생성
-            for(j=0;j<4;j++){
-                if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=ACTIVE_BLOCK;
-            }
+    for(i=0;i<4;i++){ //게임판 bx, by위치에 블럭생성
+        for(j=0;j<4;j++){
+            if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=ACTIVE_BLOCK;
         }
     }
     for(i=1;i<3;i++){ //게임상태표시에 다음에 나올블럭을 그림
         for(j=0;j<4;j++){
-            if(blocks[b_type_next][0][i][j]==1) {
-                gotoxy(STATUS_X_ADJ+7 +j,i+5);
-                printf("■");
+            if(TETRIS_BLOCK[b_type_next][0][i][j]==1) {
+                drawText(STATUS_X_ADJ+7+j,i+5,"■", COLOR_DEFAULT);
             }
             else{
-                gotoxy(STATUS_X_ADJ+7+j,i+5);
-                printf("  ");
+                drawText(STATUS_X_ADJ+7+j,i+5, "  ", COLOR_DEFAULT);
             }
         }
     }
 }
 
-void check_key(void){
+void check_key(int screenX, int screenY){
     key=0; //키값 초기화
 
     if(kbhit()){ //키입력이 있는 경우
         key=getch(); //키값을 받음
-        if (key == 9) {
-            hold_block_on = 1;
-            printf("HOLD");
-        }
-        else if(key==224){ //방향키인경우
+        if(key==224){ //방향키인경우
             do{key=getch();} while(key==224);//방향키지시값을 버림
             switch(key){
-                case LEFT: //왼쪽키 눌렀을때
-                    if(check_crush(bx-1,by,b_rotation)==true) move_block(LEFT);
+                case KEY_LEFT: //왼쪽키 눌렀을때
+                    if(check_crush(bx-1,by,b_rotation)==true) move_block(KEY_LEFT);
                     break;                            //왼쪽으로 갈 수 있는지 체크 후 가능하면 이동
-                case RIGHT: //오른쪽 방향키 눌렀을때- 위와 동일하게 처리됨
-                    if(check_crush(bx+1,by,b_rotation)==true) move_block(RIGHT);
+                case KEY_RIGHT: //오른쪽 방향키 눌렀을때- 위와 동일하게 처리됨
+                    if(check_crush(bx+1,by,b_rotation)==true) move_block(KEY_RIGHT);
                     break;
-                case DOWN: //아래쪽 방향키 눌렀을때-위와 동일하게 처리됨
-                    if(check_crush(bx,by+1,b_rotation)==true) move_block(DOWN);
+                case KEY_DOWN: //아래쪽 방향키 눌렀을때-위와 동일하게 처리됨
+                    if(check_crush(bx,by+1,b_rotation)==true) move_block(KEY_DOWN);
                     break;
-                case UP: //위쪽 방향키 눌렀을때
-                    if(check_crush(bx,by,(b_rotation+1)%4)==true) move_block(UP);
+                case KEY_UP: //위쪽 방향키 눌렀을때
+                    if(check_crush(bx,by,(b_rotation+1)%4)==true) move_block(KEY_UP);
                         //회전할 수 있는지 체크 후 가능하면 회전
                     else if(crush_on==1&&check_crush(bx,by-1,(b_rotation+1)%4)==true) move_block(100);
             }                    //바닥에 닿은 경우 위쪽으로 한칸띄워서 회전이 가능하면 그렇게 함(특수동작)
         }
         else{ //방향키가 아닌경우
             switch(key){
-                case SPACE: //스페이스키 눌렀을때
+                case KEY_SPACE: //스페이스키 눌렀을때
                     space_key_on=1; //스페이스키 flag를 띄움
                     while(crush_on==0){ //바닥에 닿을때까지 이동시킴
                         drop_block();
                         score+=level; // hard drop 보너스
-                        gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE); printf("        %6d", score); //점수 표시
+                        drawText(STATUS_X_ADJ, STATUS_Y_SCORE, "        ", COLOR_DEFAULT); //점수표시를 지움
+//                        gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE); printf("        %6d", score); //점수 표시
                     }
                     break;
-                case P: //P(대문자) 눌렀을때
-                case p: //p(소문자) 눌렀을때
-                    pause(); //일시정지
+                case KEY_P: //P(대문자) 눌렀을때
+                case KEY_p: //p(소문자) 눌렀을때
+                    pause(screenX, screenY); //일시정지
                     break;
-                case ESC: //ESC눌렀을때
+                case KEY_ESC: //ESC눌렀을때
                     system("cls"); //화면을 지우고
                     exit(0); //게임종료
             }
@@ -447,30 +393,17 @@ void drop_block(void){
         new_block_on=1; //새로운 블럭생성 flag를 켬
         return; //함수 종료
     }
-    if (hold_block_on) {
-        for(i=0;i<4;i++){
-            for(j=0;j<4;j++){
-                hold_block_on_data[i][j] = blocks[b_type][b_rotation][i][j];
-                if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
-            }
-        }
-        printf("\nholding");
-        hold_block = 1;
-        hold_block_on = 0;
-        new_block_on = 1;
-        new_block();
-    } else {
-        if(check_crush(bx,by+1, b_rotation)==true) move_block(DOWN); //밑이 비어있으면 밑으로 한칸 이동
-        if(check_crush(bx,by+1, b_rotation)==false) crush_on++; //밑으로 이동이 안되면  crush flag를 켬
-    }
+    if(check_crush(bx,by+1, b_rotation)==true) move_block(KEY_DOWN); //밑이 비어있으면 밑으로 한칸 이동
+    if(check_crush(bx,by+1, b_rotation)==false) crush_on++; //밑으로 이동이 안되면  crush flag를 켬
 }
+
 
 int check_crush(int bx, int by, int b_rotation){ //지정된 좌표와 회전값으로 충돌이 있는지 검사
     int i,j;
 
     for(i=0;i<4;i++){
         for(j=0;j<4;j++){ //지정된 위치의 게임판과 블럭모양을 비교해서 겹치면 false를 리턴
-            if(blocks[b_type][b_rotation][i][j]==1&&main_org[by+i][bx+j]>0) return false;
+            if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1&&main_org[by+i][bx+j]>0) return false;
         }
     }
     return true; //하나도 안겹치면 true리턴
@@ -480,58 +413,58 @@ void move_block(int dir){ //블록을 이동시킴
     int i,j;
 
     switch(dir){
-        case LEFT: //왼쪽방향
+        case KEY_LEFT: //왼쪽방향
             for(i=0;i<4;i++){ //현재좌표의 블럭을 지움
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
                 }
             }
             for(i=0;i<4;i++){ //왼쪽으로 한칸가서 active block을 찍음
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j-1]=ACTIVE_BLOCK;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j-1]=ACTIVE_BLOCK;
                 }
             }
             bx--; //좌표값 이동
             break;
 
-        case RIGHT:    //오른쪽 방향. 왼쪽방향이랑 같은 원리로 동작
+        case KEY_RIGHT:    //오른쪽 방향. 왼쪽방향이랑 같은 원리로 동작
             for(i=0;i<4;i++){
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
                 }
             }
             for(i=0;i<4;i++){
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j+1]=ACTIVE_BLOCK;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j+1]=ACTIVE_BLOCK;
                 }
             }
             bx++;
             break;
 
-        case DOWN:    //아래쪽 방향. 왼쪽방향이랑 같은 원리로 동작
+        case KEY_DOWN:    //아래쪽 방향. 왼쪽방향이랑 같은 원리로 동작
             for(i=0;i<4;i++){
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
                 }
             }
             for(i=0;i<4;i++){
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i+1][bx+j]=ACTIVE_BLOCK;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i+1][bx+j]=ACTIVE_BLOCK;
                 }
             }
             by++;
             break;
 
-        case UP: //키보드 위쪽 눌렀을때 회전시킴.
+        case KEY_UP: //키보드 위쪽 눌렀을때 회전시킴.
             for(i=0;i<4;i++){ //현재좌표의 블럭을 지움
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
                 }
             }
             b_rotation=(b_rotation+1)%4; //회전값을 1증가시킴(3에서 4가 되는 경우는 0으로 되돌림)
             for(i=0;i<4;i++){ //회전된 블록을 찍음
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=ACTIVE_BLOCK;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=ACTIVE_BLOCK;
                 }
             }
             break;
@@ -540,13 +473,13 @@ void move_block(int dir){ //블록을 이동시킴
             //이를 동작시키는 특수동작
             for(i=0;i<4;i++){
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i][bx+j]=EMPTY;
                 }
             }
             b_rotation=(b_rotation+1)%4;
             for(i=0;i<4;i++){
                 for(j=0;j<4;j++){
-                    if(blocks[b_type][b_rotation][i][j]==1) main_org[by+i-1][bx+j]=ACTIVE_BLOCK;
+                    if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1) main_org[by+i-1][bx+j]=ACTIVE_BLOCK;
                 }
             }
             by--;
@@ -583,14 +516,15 @@ void check_line(void){
     }
     if(combo){ //줄 삭제가 있는 경우 점수와 레벨 목표를 새로 표시함
         if(combo>1){ //2콤보이상인 경우 경우 보너스및 메세지를 게임판에 띄웠다가 지움
-            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-1,MAIN_Y_ADJ+by-2);printf("%d COMBO!",combo);
+//            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-1,MAIN_Y_ADJ+by-2);printf("%d COMBO!",combo);
+            drawText(MAIN_X_ADJ+(MAIN_X/2)-1,MAIN_Y_ADJ+by-2,"COMBO!", COLOR_DEFAULT);
             Sleep(500);
             score+=(combo*level*100);
             reset_main_cpy(); //텍스트를 지우기 위해 main_cpy을 초기화.
 //(main_cpy와 main_org가 전부 다르므로 다음번 draw()호출시 게임판 전체를 새로 그리게 됨)
         }
-        gotoxy(STATUS_X_ADJ, STATUS_Y_GOAL); printf(" GOAL  : %5d", (cnt<=10)?10-cnt:0);
-        gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE); printf("        %6d", score);
+//        gotoxy(STATUS_X_ADJ, STATUS_Y_GOAL); printf(" GOAL  : %5d", (cnt<=10)?10-cnt:0);
+//        gotoxy(STATUS_X_ADJ, STATUS_Y_SCORE); printf("        %6d", score);
     }
 }
 
@@ -604,17 +538,17 @@ void check_level_up(void){
         cnt=0; //지운 줄수 초기화
 
         for(i=0;i<4;i++){
-            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-3,MAIN_Y_ADJ+4);
-            printf("             ");
-            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-2,MAIN_Y_ADJ+6);
-            printf("             ");
-            Sleep(200);
-
-            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-3,MAIN_Y_ADJ+4);
-            printf("☆LEVEL UP!☆");
-            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-2,MAIN_Y_ADJ+6);
-            printf("☆SPEED UP!☆");
-            Sleep(200);
+//            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-3,MAIN_Y_ADJ+4);
+//            printf("             ");
+//            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-2,MAIN_Y_ADJ+6);
+//            printf("             ");
+//            Sleep(200);
+//
+//            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-3,MAIN_Y_ADJ+4);
+//            printf("☆LEVEL UP!☆");
+//            gotoxy(MAIN_X_ADJ+(MAIN_X/2)-2,MAIN_Y_ADJ+6);
+//            printf("☆SPEED UP!☆");
+//            Sleep(200);
         }
         reset_main_cpy(); //텍스트를 지우기 위해 main_cpy을 초기화.
 //(main_cpy와 main_org가 전부 다르므로 다음번 draw()호출시 게임판 전체를 새로 그리게 됨)
@@ -622,7 +556,7 @@ void check_level_up(void){
         for(i=MAIN_Y-2;i>MAIN_Y-2-(level-1);i--){ //레벨업보상으로 각 레벨-1의 수만큼 아랫쪽 줄을 지워줌
             for(j=1;j<MAIN_X-1;j++){
                 main_org[i][j]=INACTIVE_BLOCK; // 줄을 블록으로 모두 채우고
-                gotoxy(MAIN_X_ADJ+j,MAIN_Y_ADJ+i); // 별을 찍어줌.. 이뻐보이게
+//                gotoxy(MAIN_X_ADJ+j,MAIN_Y_ADJ+i); // 별을 찍어줌.. 이뻐보이게
                 printf("★");
                 Sleep(20);
             }
@@ -661,8 +595,8 @@ void check_level_up(void){
         }
         level_up_on=0; //레벨업 flag꺼줌
 
-        gotoxy(STATUS_X_ADJ, STATUS_Y_LEVEL); printf(" LEVEL : %5d", level); //레벨표시
-        gotoxy(STATUS_X_ADJ, STATUS_Y_GOAL); printf(" GOAL  : %5d", 10-cnt); // 레벨목표 표시
+//        gotoxy(STATUS_X_ADJ, STATUS_Y_LEVEL); printf(" LEVEL : %5d", level); //레벨표시
+//        gotoxy(STATUS_X_ADJ, STATUS_Y_GOAL); printf(" GOAL  : %5d", 10-cnt); // 레벨목표 표시
 
     }
 }
@@ -675,25 +609,25 @@ void check_game_over(void){
 
     for(i=1;i<MAIN_X-2;i++){
         if(main_org[3][i]>0){ //천장(위에서 세번째 줄)에 inactive가 생성되면 게임 오버
-            gotoxy(x,y+0); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤"); //게임오버 메세지
-            gotoxy(x,y+1); printf("▤                              ▤");
-            gotoxy(x,y+2); printf("▤  +-----------------------+   ▤");
-            gotoxy(x,y+3); printf("▤  |  G A M E  O V E R..   |   ▤");
-            gotoxy(x,y+4); printf("▤  +-----------------------+   ▤");
-            gotoxy(x,y+5); printf("▤   YOUR SCORE: %6d         ▤",score);
-            gotoxy(x,y+6); printf("▤                              ▤");
-            gotoxy(x,y+7); printf("▤  Press any key to restart..  ▤");
-            gotoxy(x,y+8); printf("▤                              ▤");
-            gotoxy(x,y+9); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤");
+//            gotoxy(x,y+0); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤"); //게임오버 메세지
+//            gotoxy(x,y+1); printf("▤                              ▤");
+//            gotoxy(x,y+2); printf("▤  +-----------------------+   ▤");
+//            gotoxy(x,y+3); printf("▤  |  G A M E  O V E R..   |   ▤");
+//            gotoxy(x,y+4); printf("▤  +-----------------------+   ▤");
+//            gotoxy(x,y+5); printf("▤   YOUR SCORE: %6d         ▤",score);
+//            gotoxy(x,y+6); printf("▤                              ▤");
+//            gotoxy(x,y+7); printf("▤  Press any key to restart..  ▤");
+//            gotoxy(x,y+8); printf("▤                              ▤");
+//            gotoxy(x,y+9); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤");
             last_score=score; //게임점수를 옮김
 
             if(score>best_score){ //최고기록 갱신시
                 FILE* file=fopen("score.dat", "wt"); //score.dat에 점수 저장
 
-                gotoxy(x,y+6); printf("▤  ★★★ BEST SCORE! ★★★   ▤  ");
+//                gotoxy(x,y+6); printf("▤  ★★★ BEST SCORE! ★★★   ▤  ");
 
                 if(file==0){ //파일 에러메세지
-                    gotoxy(0,0);
+//                    gotoxy(0,0);
                     printf("FILE ERROR: SYSTEM CANNOT WRITE BEST SCORE ON \"SCORE.DAT\"");
                 }
                 else{
@@ -709,38 +643,31 @@ void check_game_over(void){
     }
 }
 
-void pause(void){ //게임 일시정지 함수
+void pause(int screenX, int screenY){ //게임 일시정지 함수
     int i,j;
 
     int x=5;
     int y=5;
 
     for(i=1;i<MAIN_X-2;i++){ //게임 일시정지 메세지
-        gotoxy(x,y+0); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤");
-        gotoxy(x,y+1); printf("▤                              ▤");
-        gotoxy(x,y+2); printf("▤  +-----------------------+   ▤");
-        gotoxy(x,y+3); printf("▤  |       P A U S E       |   ▤");
-        gotoxy(x,y+4); printf("▤  +-----------------------+   ▤");
-        gotoxy(x,y+5); printf("▤  Press any key to resume..   ▤");
-        gotoxy(x,y+6); printf("▤                              ▤");
-        gotoxy(x,y+7); printf("▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤▤");
+        drawText(10, 17, "    PAUSE    ", 240);
     }
     getch(); //키입력시까지 대기
 
     system("cls"); //화면 지우고 새로 그림
     reset_main_cpy();
+    drawNextBlockUI(screenX, screenY);
+    drawInfoTextUI();
     draw_main();
     draw_map();
 
     for(i=1;i<3;i++){ // 다음블록 그림
         for(j=0;j<4;j++){
-            if(blocks[b_type_next][0][i][j]==1) {
-                gotoxy(MAIN_X+MAIN_X_ADJ+3+j,i+6);
-                printf("■");
+            if(TETRIS_BLOCK[b_type_next][0][i][j]==1) {
+                drawText(MAIN_X+MAIN_X_ADJ+3+j,i+6,"■", COLOR_DEFAULT);
             }
             else{
-                gotoxy(MAIN_X+MAIN_X_ADJ+3+j,i+6);
-                printf("  ");
+                drawText(MAIN_X+MAIN_X_ADJ+3+j,i+6,"  ", COLOR_DEFAULT);
             }
         }
     }
