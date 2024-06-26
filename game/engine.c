@@ -150,8 +150,11 @@ void handle_server(char *ip, int port){
         return;
     }
 }
+int starGameEngine(int screenX, int screenY) {
 
-int startGameEngine(int screenX, int screenY, char* ip, int port){
+}
+
+int startNetworkGameEngine(int screenX, int screenY, char* ip, int port){
     system("cls");
 
     printf("함수 실행 됨");
@@ -165,7 +168,7 @@ int startGameEngine(int screenX, int screenY, char* ip, int port){
 //    drawNextBlockUI(screenX, screenY);
 //    drawInfoTextUI();
 //
-//    while(1) {
+    while(1) {
 //        for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
 //            check_key(screenX, screenY); //키입력확인
 //            draw_main(); //화면을 그림
@@ -181,7 +184,7 @@ int startGameEngine(int screenX, int screenY, char* ip, int port){
 //        check_level_up(); // 레벨업을 체크
 //        check_game_over(); //게임오버를 체크
 //        if(new_block_on==1) new_block(); // 뉴 블럭 flag가 있는 경우 새로운 블럭 생성
-//    }
+    }
 }
 
 

@@ -43,6 +43,6 @@ int screenStartSoloGame(int screenX, int screenY) {
             screenStartSoloGame(screenX, screenY);
             break;
         case 2:
-            startGameEngine(screenX, screenY);
+            startNetworkGameEngine(screenX, screenY);
     }
 }
