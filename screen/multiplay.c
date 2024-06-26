@@ -6,6 +6,8 @@
 #include "../screen.h"
 #include "../render/prompt.h"
 #include "../game/engine.h"
+#include "../game/event.h"
+#include "../game/play.h"
 
 int screenStartMultiplay(int screenX, int screenY, char* ip, char* roomName, int playerCount) {
     system("cls");
@@ -16,9 +18,13 @@ int screenStartMultiplay(int screenX, int screenY, char* ip, char* roomName, int
 
     if (playerCount == 2) {
         movePos(screenX + 4, screenY + 4); printf("< 방에 참가할 수 없음 >      "); Sleep(100);
-        movePos(screenX + 3, screenY + 6); printf("모집 인원이 모두 찼습니다. 5초 뒤에 홈으로 이동합니다..."); Sleep(100);
+        movePos(screenX + 3, screenY + 6); printf("모집 인원이 모두 찼습니다. 5초 뒤에 홈으로 이동합니다..."); Sleep(5000);
+        screenStartHome(screenX, screenY);
+        return 0;
     } else {
-        movePos(screenX + 4, screenY + 4); printf("< 방에 참가할 수 없음 >                "); Sleep(100);
-        movePos(screenX + 3, screenY + 6); printf("서버가 응답이 없습니다."); Sleep(100);
+        playNetworkGame(screenX, screenY, ip);
+//        handle_server(ip);
+//        movePos(screenX + 4, screenY + 4); printf("< 방에 참가할 수 없음 >                "); Sleep(100);
+//        movePos(screenX + 3, screenY + 6); printf("서버가 응답이 없습니다."); Sleep(100);
     }
 }

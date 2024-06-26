@@ -4,6 +4,7 @@
 #include<time.h>
 #include<stdlib.h>
 
+#include "event.h"
 #include "engine.h"
 #include "draw.h"
 #include "../utils/color.h"
@@ -62,7 +63,40 @@ int crush_on=0; //현재 이동중인 블록이 충돌상태인지 알려주는 
 int level_up_on=0; //다음레벨로 진행(현재 레벨목표가 완료되었음을) 알리는 flag
 int space_key_on=0; //hard drop상태임을 알려주는 flag
 
-int startNetworkGameEngine(int screenX, int screenY, MultiGameSetting setting) {
+int startNetworkGameEngine(int screenX, int screenY, char* username, char* ip) {
+    onGameEngineStart(username, ip);
+    system("cls");
+
+    int i;
+    srand((unsigned)time(NULL)); //난수표생성
+    setCursorType(NOCURSOR); //커서 없앰
+    reset(); //게임판 리셋
+    drawNextBlockUI(screenX, screenY);
+    drawInfoTextUI(40);
+
+    onGameReady();
+
+    while(1) {
+        for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
+            check_key(screenX, screenY); //키입력확인
+            draw_main(); //화면을 그림
+            Sleep(speed); //게임속도조절
+            if(crush_on&&check_crush(bx,by+1, b_rotation)==false) Sleep(100);
+            //블록이 충돌중인경우 추가로 이동및 회전할 시간을 갖음
+            if(space_key_on==1) { //스페이스바를 누른경우(hard drop) 추가로 이동및 회전할수 없음 break;
+                space_key_on=0;
+                break;
+            }
+        }
+        drop_block(); // 블록을 한칸 내림
+        check_level_up(); // 레벨업을 체크
+        check_game_over(); //게임오버를 체크
+        if(new_block_on==1) new_block(); // 뉴 블럭 flag가 있는 경우 새로운 블럭 생성
+    }
+    // 위에 솔로게임 UI 만들기
+}
+
+int startSoloGameEngine(int screenX, int screenY) {
     system("cls");
 
     int i;

@@ -4,7 +4,8 @@ typedef struct {
 } MultiGameSetting;
 
 
-int startNetworkGameEngine(int screenX, int screenY, MultiGameSetting setting);
+int startSoloGameEngine(int screenX, int screenY);
+int startNetworkGameEngine(int screenX, int screenY, char* username, char* ip);
 
 void reset(void); //게임판 초기화
 void reset_main(void); //메인 게임판(main_org[][]를 초기화)

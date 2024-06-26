@@ -15,16 +15,20 @@ int screenStartSoloGame(int screenX, int screenY) {
     printf("\n\n입력한 문자열: %s\n", nickname);
 
     system("cls");
-    char* menuText[] = {
+    char *menuText[] = {
             " 40L  | 40 LINES - QUICKLY COMPLETE 40 LINES \n",
             " BLZ  | BLITZ - A TWO MINUTE RACE            \n",
             " ZEN  | ZEN - RELAX OR TRAIN MODE            \n",
     };
     int menuCount = sizeof(menuText) / sizeof(menuText[0]);
 
-    MenuRender* render = createMenuRender(3, 4, menuText, menuCount);
-    movePos(screenX + 10, screenY + 5); printf("SOLO | %s", nickname); Sleep(100);
-    movePos(screenX + 9, screenY + 2); printf("WELCOME TO JWATRIO!"); Sleep(100);
+    MenuRender *render = createMenuRender(3, 4, menuText, menuCount);
+    movePos(screenX + 10, screenY + 5);
+    printf("SOLO | %s", nickname);
+    Sleep(100);
+    movePos(screenX + 9, screenY + 2);
+    printf("WELCOME TO JWATRIO!");
+    Sleep(100);
     render->renderMenu(render);
     while (1) {
         int callbackCode = render->menuKeyDetect(render);

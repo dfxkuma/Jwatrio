@@ -4,7 +4,6 @@
 
 #include "../render/menu.h"
 #include "../screen.h"
-#include "../render/prompt.h"
 #include "../game/engine.h"
 
 int screenStartHome(int screenX, int screenY) {
