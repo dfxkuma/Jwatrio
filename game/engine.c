@@ -10,16 +10,7 @@
 #include "../utils/color.h"
 #include "../utils/keyboard.h"
 #include "../render/text.h"
-
-#define false 0
-#define true 1
-
-#define ACTIVE_BLOCK -2 // 게임판배열에 저장될 블록의 상태들
-#define CEILLING -1     // 블록이 이동할 수 있는 공간은 0 또는 음의 정수료 표현
-#define EMPTY 0         // 블록이 이동할 수 없는 공간은 양수로 표현
-#define WALL 1
-#define BOTTOM_WALL 3
-#define INACTIVE_BLOCK 2 // 이동이 완료된 블록값
+#include "../utils/typehint.h"
 
 #define MAIN_X 11 //게임판 가로크기
 #define MAIN_Y 24 //게임판 세로크기
@@ -28,7 +19,7 @@
 
 #define BUFFER_SIZE 2048 // 서버 버퍼
 
-#define STATUS_X_ADJ MAIN_X_ADJ+MAIN_X+1 //게임정보표시 위치조정
+#define STATUS_X_ADJ (MAIN_X_ADJ+MAIN_X+1) //게임정보표시 위치조정
 
 int STATUS_Y_GOAL; //GOAL 정보표시위치Y 좌표 저장
 int STATUS_Y_LEVEL; //LEVEL 정보표시위치Y 좌표 저장
@@ -48,11 +39,14 @@ int key; //키보드로 입력받은 키값을 저장
 
 int speed; //게임진행속도
 int level; //현재 level
-int level_goal; //다음레벨로 넘어가기 위한 목표점수
 int cnt; //현재 레벨에서 제거한 줄 수를 저장
 int score; //현재 점수
 int last_score=0; //마지막게임점수
 int best_score=0; //최고게임점수
+
+// 점수 관리
+int crushed_lines = 0; // 지운 줄 수
+int used_blocks = 0;
 
 int new_block_on=0; //새로운 블럭이 필요함을 알리는 flag
 int crush_on=0; //현재 이동중인 블록이 충돌상태인지 알려주는 flag
@@ -158,32 +152,32 @@ int startNetworkGameEngine(int screenX, int screenY, char* ip, int port){
     system("cls");
 
     printf("함수 실행 됨");
-    handle_server(ip, port);
+//    handle_server(ip, port);
 
-//    int i;
-//
-//    srand((unsigned)time(NULL)); //난수표생성
-//    setCursorType(NOCURSOR); //커서 없앰
-//    reset(); //게임판 리셋
-//    drawNextBlockUI(screenX, screenY);
-//    drawInfoTextUI();
-//
+    int i;
+
+    srand((unsigned)time(NULL)); //난수표생성
+    setCursorType(NOCURSOR); //커서 없앰
+    reset(); //게임판 리셋
+    drawNextBlockUI(screenX, screenY);
+    drawInfoTextUI();
+
     while(1) {
-//        for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
-//            check_key(screenX, screenY); //키입력확인
-//            draw_main(); //화면을 그림
-//            Sleep(speed); //게임속도조절
-//            if(crush_on&&check_crush(bx,by+1, b_rotation)==false) Sleep(100);
-//            //블록이 충돌중인경우 추가로 이동및 회전할 시간을 갖음
-//            if(space_key_on==1) { //스페이스바를 누른경우(hard drop) 추가로 이동및 회전할수 없음 break;
-//                space_key_on=0;
-//                break;
-//            }
-//        }
-//        drop_block(); // 블록을 한칸 내림
-//        check_level_up(); // 레벨업을 체크
-//        check_game_over(); //게임오버를 체크
-//        if(new_block_on==1) new_block(); // 뉴 블럭 flag가 있는 경우 새로운 블럭 생성
+        for(i=0;i<5;i++){ //블록이 한칸떨어지는동안 5번 키입력받을 수 있음
+            check_key(screenX, screenY); //키입력확인
+            draw_main(); //화면을 그림
+            Sleep(speed); //게임속도조절
+            if(crush_on&&check_crush(bx,by+1, b_rotation)==FALSE) Sleep(100);
+            //블록이 충돌중인경우 추가로 이동및 회전할 시간을 갖음
+            if(space_key_on==1) { //스페이스바를 누른경우(hard drop) 추가로 이동및 회전할수 없음 break;
+                space_key_on=0;
+                break;
+            }
+        }
+        drop_block(); // 블록을 한칸 내림
+        check_level_up(); // 레벨업을 체크
+        check_game_over(); //게임오버를 체크
+        if(new_block_on==1) new_block(); // 뉴 블럭 flag가 있는 경우 새로운 블럭 생성
     }
 }
 
@@ -193,7 +187,6 @@ void reset(void){
 
     level=1; //각종변수 초기화
     score=0;
-    level_goal=1000;
     key=0;
     crush_on=0;
     cnt=0;
@@ -343,18 +336,18 @@ void check_key(int screenX, int screenY){
             do{key=getch();} while(key==224);//방향키지시값을 버림
             switch(key){
                 case KEY_LEFT: //왼쪽키 눌렀을때
-                    if(check_crush(bx-1,by,b_rotation)==true) move_block(KEY_LEFT);
+                    if(check_crush(bx-1,by,b_rotation)==TRUE) move_block(KEY_LEFT);
                     break;                            //왼쪽으로 갈 수 있는지 체크 후 가능하면 이동
                 case KEY_RIGHT: //오른쪽 방향키 눌렀을때- 위와 동일하게 처리됨
-                    if(check_crush(bx+1,by,b_rotation)==true) move_block(KEY_RIGHT);
+                    if(check_crush(bx+1,by,b_rotation)==TRUE) move_block(KEY_RIGHT);
                     break;
                 case KEY_DOWN: //아래쪽 방향키 눌렀을때-위와 동일하게 처리됨
-                    if(check_crush(bx,by+1,b_rotation)==true) move_block(KEY_DOWN);
+                    if(check_crush(bx,by+1,b_rotation)==TRUE) move_block(KEY_DOWN);
                     break;
                 case KEY_UP: //위쪽 방향키 눌렀을때
-                    if(check_crush(bx,by,(b_rotation+1)%4)==true) move_block(KEY_UP);
+                    if(check_crush(bx,by,(b_rotation+1)%4)==TRUE) move_block(KEY_UP);
                         //회전할 수 있는지 체크 후 가능하면 회전
-                    else if(crush_on==1&&check_crush(bx,by-1,(b_rotation+1)%4)==true) move_block(100);
+                    else if(crush_on==1&&check_crush(bx,by-1,(b_rotation+1)%4)==TRUE) move_block(100);
             }                    //바닥에 닿은 경우 위쪽으로 한칸띄워서 회전이 가능하면 그렇게 함(특수동작)
         }
         else{ //방향키가 아닌경우
@@ -384,8 +377,8 @@ void check_key(int screenX, int screenY){
 void drop_block(void){
     int i,j;
 
-    if(crush_on&&check_crush(bx,by+1, b_rotation)==true) crush_on=0; //밑이 비어있으면 crush flag 끔
-    if(crush_on&&check_crush(bx,by+1, b_rotation)==false){ //밑이 비어있지않고 crush flag가 켜저있으면
+    if(crush_on&&check_crush(bx,by+1, b_rotation)==TRUE) crush_on=0; //밑이 비어있으면 crush flag 끔
+    if(crush_on&&check_crush(bx,by+1, b_rotation)==FALSE){ //밑이 비어있지않고 crush flag가 켜저있으면
         for(i=0;i<MAIN_Y;i++){ //현재 조작중인 블럭을 굳힘
             for(j=0;j<MAIN_X;j++){
                 if(main_org[i][j]==ACTIVE_BLOCK) main_org[i][j]=INACTIVE_BLOCK;
@@ -394,10 +387,12 @@ void drop_block(void){
         crush_on=0; //flag를 끔
         check_line(); //라인체크를 함
         new_block_on=1; //새로운 블럭생성 flag를 켬
+        used_blocks++;
+        drawInfoPIECES(used_blocks);
         return; //함수 종료
     }
-    if(check_crush(bx,by+1, b_rotation)==true) move_block(KEY_DOWN); //밑이 비어있으면 밑으로 한칸 이동
-    if(check_crush(bx,by+1, b_rotation)==false) crush_on++; //밑으로 이동이 안되면  crush flag를 켬
+    if(check_crush(bx,by+1, b_rotation)==TRUE) move_block(KEY_DOWN); //밑이 비어있으면 밑으로 한칸 이동
+    if(check_crush(bx,by+1, b_rotation)==FALSE) crush_on++; //밑으로 이동이 안되면  crush flag를 켬
 }
 
 
@@ -406,10 +401,10 @@ int check_crush(int bx, int by, int b_rotation){ //지정된 좌표와 회전값
 
     for(i=0;i<4;i++){
         for(j=0;j<4;j++){ //지정된 위치의 게임판과 블럭모양을 비교해서 겹치면 false를 리턴
-            if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1&&main_org[by+i][bx+j]>0) return false;
+            if(TETRIS_BLOCK[b_type][b_rotation][i][j]==1&&main_org[by+i][bx+j]>0) return TRUE;
         }
     }
-    return true; //하나도 안겹치면 true리턴
+    return FALSE; //하나도 안겹치면 true리턴
 };
 
 void move_block(int dir){ //블록을 이동시킴
@@ -502,6 +497,8 @@ void check_line(void){
             if(main_org[i][j]>0) block_amount++;
         }
         if(block_amount==MAIN_X-2){ //블록이 가득 찬 경우
+            crushed_lines++; //지운 줄 수 증가
+            drawInfoLINES(crushed_lines, 40);
             if(level_up_on==0){ //레벨업상태가 아닌 경우에(레벨업이 되면 자동 줄삭제가 있음)
                 score+=100*level; //점수추가
                 cnt++; //지운 줄 갯수 카운트 증가

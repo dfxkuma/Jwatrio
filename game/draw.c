@@ -47,6 +47,23 @@ void drawInfoTextUI() {
     drawText( 1, 23, "0/40", 7);
     drawText(1, 24, "TIME", 7);
     drawText(1, 25, "0:13.233", 7);
+
+}
+
+void drawInfoPIECES(int count) {
+    char text[20];
+    sprintf(text, "%d", count);
+    drawText(1, 21, text, 7);
+}
+
+void drawInfoLINES(int count, int maxCount) {
+    char text[20];
+    sprintf(text, "%d/%d", count, maxCount);
+    drawText(1, 23, text, 7);
+}
+
+void drawInfoTIME(char* timeFormatted) {
+    drawText(1, 25, timeFormatted, 7);
 }
 
 int TETRIS_BLOCK[7][4][4][4]={

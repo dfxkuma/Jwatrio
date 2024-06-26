@@ -11,5 +11,9 @@ void drawGameUI(int screenX, int screenY);
 void drawInfoTextUI();
 void drawNextBlockUI(int screenX, int screenY);
 
+void drawInfoPIECES(int count);
+void drawInfoLINES(int count, int maxCount);
+void drawInfoTIME(char* timeFormatted);
+
 extern int TETRIS_BLOCK[7][4][4][4];
 
